@@ -51,9 +51,9 @@ const themes = [
           class="glass-card p-8 group hover:-translate-y-2 transition-all duration-300 reveal"
           :class="`reveal-delay-${i % 4 + 1}`"
         >
-          <span class="text-5xl font-black text-white/5 group-hover:text-white/10 transition-colors">{{ theme.number }}</span>
+          <span class="text-5xl font-black text-gray-100 group-hover:text-gray-200 transition-colors">{{ theme.number }}</span>
 
-          <h3 class="text-xl font-bold text-white mb-2 mt-4 group-hover:text-accent-red transition-colors">
+          <h3 class="text-xl font-bold text-gray-900 mb-2 mt-4 group-hover:text-accent transition-colors">
             {{ theme.title }}
           </h3>
 
@@ -63,7 +63,7 @@ const themes = [
             <span
               v-for="tag in theme.tags"
               :key="tag"
-              class="px-3 py-1 text-xs rounded-full border border-white/10 text-text-secondary group-hover:border-accent-red/30 group-hover:text-white/80 transition-all"
+              class="px-3 py-1 text-xs rounded-full border border-gray-200 text-text-secondary group-hover:border-accent/30 group-hover:text-gray-700 transition-all"
             >
               {{ tag }}
             </span>

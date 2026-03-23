@@ -43,7 +43,7 @@ const faqs = [
   <section id="faq" class="relative py-32 bg-bg-secondary overflow-hidden">
     <div class="max-w-3xl mx-auto px-6">
       <div class="text-center mb-16 reveal">
-        <span class="text-accent-red text-sm font-semibold uppercase tracking-wider">Questions?</span>
+        <span class="text-accent text-sm font-semibold uppercase tracking-wider">Questions?</span>
         <h2 class="text-4xl md:text-5xl font-bold mt-4">
           <span class="heading-serif accent-text">FAQ</span>
         </h2>
@@ -54,13 +54,13 @@ const faqs = [
           v-for="(faq, i) in faqs"
           :key="i"
           class="glass-card overflow-hidden transition-all"
-          :class="openIndex === i ? 'border-accent-red/30' : ''"
+          :class="openIndex === i ? 'border-accent/30' : ''"
         >
           <button
             @click="toggle(i)"
             class="w-full flex items-center justify-between p-6 text-left"
           >
-            <span class="font-semibold text-white pr-4">{{ faq.q }}</span>
+            <span class="font-semibold text-gray-900 pr-4">{{ faq.q }}</span>
             <svg
               class="w-5 h-5 text-text-secondary shrink-0 transition-transform duration-300"
               :class="openIndex === i ? 'rotate-180' : ''"

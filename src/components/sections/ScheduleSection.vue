@@ -29,7 +29,7 @@ const schedule = {
   <section id="schedule" class="relative py-32 bg-bg-secondary overflow-hidden">
     <div class="max-w-4xl mx-auto px-6">
       <div class="text-center mb-16 reveal">
-        <span class="text-accent-red text-sm font-semibold uppercase tracking-wider">Two Intense Days</span>
+        <span class="text-accent text-sm font-semibold uppercase tracking-wider">Two Intense Days</span>
         <h2 class="text-4xl md:text-5xl font-bold mt-4">
           <span class="heading-serif accent-text">Schedule</span>
         </h2>
@@ -41,10 +41,10 @@ const schedule = {
           v-for="day in ([1, 2] as const)"
           :key="day"
           @click="activeDay = day"
-          class="px-8 py-3 rounded-full font-semibold transition-all"
+          class="px-8 py-3 text-sm font-semibold tracking-wider uppercase transition-all border"
           :class="activeDay === day
-            ? 'bg-gradient-to-r from-accent-red to-accent-red-dark text-white shadow-lg shadow-accent-red/20'
-            : 'glass-card text-text-secondary hover:text-white'"
+            ? 'bg-accent border-accent text-gray-900'
+            : 'border-gray-200 bg-transparent text-text-secondary hover:text-gray-900 hover:border-gray-300'"
         >
           Day {{ day }} — May {{ day + 4 }} ({{ day === 1 ? 'Tuesday' : 'Wednesday' }})
         </button>
@@ -53,7 +53,7 @@ const schedule = {
       <!-- Timeline -->
       <div class="relative">
         <!-- Vertical line -->
-        <div class="absolute left-[7px] md:left-[140px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-accent-red via-accent-blue to-accent-cyan"></div>
+        <div class="absolute left-[7px] md:left-[140px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-gray-300 via-gray-400 to-gray-500"></div>
 
         <div
           v-for="(item, i) in schedule[activeDay]"
@@ -61,17 +61,17 @@ const schedule = {
           class="relative flex gap-6 md:gap-8 mb-8 group"
         >
           <!-- Dot -->
-          <div class="absolute left-0 md:left-[133px] w-4 h-4 rounded-full bg-bg-secondary border-2 border-accent-red group-hover:bg-accent-red group-hover:scale-125 transition-all mt-1"></div>
+          <div class="absolute left-0 md:left-[133px] w-4 h-4 rounded-full bg-white border-2 border-gray-900-red group-hover:bg-gray-900 group-hover:scale-125 transition-all mt-1"></div>
 
           <!-- Time -->
           <div class="hidden md:block w-[120px] text-right shrink-0">
-            <span class="text-sm font-mono text-accent-yellow">{{ item.time }}</span>
+            <span class="text-sm font-mono text-amber-600">{{ item.time }}</span>
           </div>
 
           <!-- Content -->
           <div class="ml-8 md:ml-6 glass-card p-6 flex-1 group-hover:-translate-y-1 transition-transform">
-            <span class="md:hidden text-xs font-mono text-accent-yellow">{{ item.time }}</span>
-            <h3 class="font-bold text-white text-lg">{{ item.title }}</h3>
+            <span class="md:hidden text-xs font-mono text-amber-600">{{ item.time }}</span>
+            <h3 class="font-bold text-gray-900 text-lg">{{ item.title }}</h3>
             <p v-if="item.desc" class="text-text-secondary text-sm mt-1">{{ item.desc }}</p>
           </div>
         </div>

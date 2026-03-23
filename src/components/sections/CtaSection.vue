@@ -1,6 +1,6 @@
 <template>
   <section class="relative py-32 bg-bg-secondary overflow-hidden">
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent-red/5 rounded-full blur-[120px]"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[120px]"></div>
 
     <div class="relative max-w-3xl mx-auto px-6 text-center reveal">
       <h2 class="text-4xl md:text-5xl font-bold mb-6">
@@ -14,7 +14,7 @@
       </p>
       <a
         href="#teams"
-        class="inline-block px-10 py-4 bg-gradient-to-r from-accent-red to-accent-red-dark text-white font-bold text-lg rounded-full hover:shadow-xl hover:shadow-accent-red/30 transition-all hover:scale-105 active:scale-95"
+        class="inline-block px-10 py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors"
       >
         Apply Now
       </a>

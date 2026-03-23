@@ -108,11 +108,20 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  // UPLOAD: POST /api/upload
+  // UPLOAD: POST /api/upload (max 2MB)
   if (pathname === '/api/upload' && req.method === 'POST') {
+    const MAX_SIZE = 2 * 1024 * 1024 // 2MB
+    const contentLength = parseInt(req.headers['content-length'] || '0')
+    if (contentLength > MAX_SIZE) return jsonError(res, 413, 'File too large (max 2MB)')
     try {
       const { file } = await parseMultipart(req)
       if (!file) return jsonError(res, 400, 'No file uploaded')
+      // Check actual file size
+      const stats = fs.statSync(file.path)
+      if (stats.size > MAX_SIZE) {
+        fs.unlinkSync(file.path)
+        return jsonError(res, 413, 'File too large (max 2MB)')
+      }
       const publicUrl = `/uploads/${file.filename}`
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ url: publicUrl }))

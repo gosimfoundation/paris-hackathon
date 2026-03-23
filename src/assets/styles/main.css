@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-primary: #0a0a1a;
-  --color-bg-secondary: #111128;
-  --color-bg-card: rgba(255, 255, 255, 0.05);
-  --color-accent-red: #FB6A58;
-  --color-accent-red-dark: #FD543F;
-  --color-accent-blue: #1976D2;
-  --color-accent-yellow: #FFC63E;
-  --color-accent-cyan: #6DCACE;
-  --color-text-secondary: #94a3b8;
+  --color-bg-primary: #f9fafb;
+  --color-bg-secondary: #f3f4f6;
+  --color-bg-card: #ffffff;
+  --color-accent: #111827;
+  --color-accent-hover: #374151;
+  --color-accent-red: #111827;
+  --color-accent-red-dark: #374151;
+  --color-accent-blue: #111827;
+  --color-accent-yellow: #d97706;
+  --color-accent-cyan: #0891b2;
+  --color-text-secondary: #374151;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
@@ -18,8 +20,6 @@
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
   --animate-marquee: marquee 30s linear infinite;
   --animate-marquee-reverse: marquee-reverse 30s linear infinite;
-  --animate-flip: flip 0.6s ease-in-out;
-  --animate-fade-in-up: fade-in-up 0.8s ease-out forwards;
   --animate-bounce-slow: bounce-slow 3s infinite;
 }
 
@@ -43,32 +43,21 @@
   100% { transform: translateX(0); }
 }
 
-@keyframes flip {
-  0% { transform: rotateX(0); }
-  50% { transform: rotateX(90deg); }
-  100% { transform: rotateX(0); }
-}
-
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @keyframes bounce-slow {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0a0a1a; }
-::-webkit-scrollbar-thumb { background: #FB6A58; border-radius: 3px; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #f3f4f6; }
+::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 2px; }
 
 /* Global */
 html {
   scroll-behavior: smooth;
-  background: #0a0a1a;
-  color: #fff;
+  background: #f9fafb;
+  color: #111827;
 }
 
 body {
@@ -77,67 +66,34 @@ body {
 
 /* Accent text */
 .accent-text {
-  color: #FB6A58;
+  color: #111827;
 }
 
-/* Elegant heading font */
+/* Heading serif */
 .heading-serif {
   font-family: 'Playfair Display', Georgia, serif;
   font-style: italic;
   font-weight: 500;
 }
 
-/* Glass card */
+/* Card */
 .glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .glass-card:hover {
-  border-color: rgba(251, 106, 88, 0.4);
-  box-shadow: 0 0 30px rgba(251, 106, 88, 0.15);
+  border-color: #9ca3af;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
-/* Glow effects */
-.glow-red { box-shadow: 0 0 40px rgba(251, 106, 88, 0.3); }
-.glow-blue { box-shadow: 0 0 40px rgba(25, 118, 210, 0.3); }
-.glow-yellow { box-shadow: 0 0 40px rgba(255, 198, 62, 0.3); }
-.glow-cyan { box-shadow: 0 0 40px rgba(109, 202, 206, 0.3); }
-
-/* Floating particles */
-.particles::before,
-.particles::after {
-  content: '';
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.15;
-  pointer-events: none;
-}
-
-.particles::before {
-  background: #FB6A58;
-  top: 20%;
-  left: 10%;
-  animation: float 8s ease-in-out infinite;
-}
-
-.particles::after {
-  background: #1976D2;
-  bottom: 20%;
-  right: 10%;
-  animation: float 10s ease-in-out infinite reverse;
-}
-
-/* Section reveal animation */
+/* Section reveal */
 .reveal {
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
 }
 
 .reveal.visible {
@@ -149,3 +105,4 @@ body {
 .reveal-delay-2 { transition-delay: 0.2s; }
 .reveal-delay-3 { transition-delay: 0.3s; }
 .reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }

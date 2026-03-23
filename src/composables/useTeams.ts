@@ -25,6 +25,7 @@ const totalMembers = ref(0)
 const maxParticipants = ref(100)
 const loading = ref(false)
 const error = ref('')
+const lastUpdated = ref<Date | null>(null)
 
 let pollTimer: number | undefined
 
@@ -51,6 +52,7 @@ export function useTeams() {
       teams.value = data.teams
       totalMembers.value = data.totalMembers
       maxParticipants.value = data.maxParticipants
+      lastUpdated.value = new Date()
     } catch {
       // silent fail on poll
     }
@@ -124,6 +126,6 @@ export function useTeams() {
 
   return {
     teams, totalMembers, maxParticipants, spotsLeft, isFull, progress,
-    modelStats, loading, error, fetchTeams, registerTeam, joinTeam,
+    modelStats, loading, error, lastUpdated, fetchTeams, registerTeam, joinTeam,
   }
 }
