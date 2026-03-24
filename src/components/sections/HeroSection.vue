@@ -17,8 +17,8 @@ const timeUnits = [
   <section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-bg-primary">
     <!-- Animated gradient background -->
     <div
-      class="absolute inset-0 opacity-20 animate-gradient-shift"
-      style="background: linear-gradient(-45deg, #2563eb, #d97706, #0891b2, #b45309); background-size: 400% 400%;"
+      class="absolute inset-0 opacity-10 animate-gradient-shift"
+      style="background: linear-gradient(-45deg, #2c3e6b, #16A085, #7c9ec9, #16A085); background-size: 400% 400%;"
     ></div>
 
     <!-- Grid pattern overlay -->
@@ -45,7 +45,7 @@ const timeUnits = [
 
       <!-- Main title -->
       <h1 class="font-black leading-[0.9] mb-6 tracking-tight">
-        <span class="block text-6xl md:text-8xl lg:text-[10rem] shimmer-text" style="font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em;">GOSIM</span>
+        <span class="block text-6xl md:text-8xl lg:text-[10rem] shimmer-text" style="font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em;"><span v-for="(letter, i) in 'GOSIM'" :key="i" class="bounce-letter" :style="{ animationDelay: `${i * 0.15}s` }">{{ letter }}</span></span>
         <span class="block text-3xl md:text-5xl lg:text-7xl heading-serif font-medium text-gray-600 mt-2">Agentic</span>
         <span class="block text-3xl md:text-5xl lg:text-7xl heading-serif font-medium text-gray-600">Hackathon</span>
       </h1>
@@ -94,7 +94,7 @@ const timeUnits = [
       <a
         href="#teams"
         class="inline-block px-10 py-4 text-white text-sm font-semibold tracking-widest uppercase transition-all duration-300 rounded-lg hover:shadow-lg hover:shadow-blue-500/20 hover:-translate-y-0.5"
-        style="background: linear-gradient(135deg, #111827, #2563eb);"
+        style="background: linear-gradient(135deg, #2c3e6b, #16A085);"
       >
         {{ t('nav.applyNow') }}
       </a>

@@ -15,18 +15,15 @@ const { t } = useI18n()
 
       <div class="grid md:grid-cols-3 gap-8 mb-12 reveal">
         <a href="https://z.ai/" target="_blank" class="glass-card glass-card-glow glow-border p-10 text-center transition-all group block">
-          <img src="/sponsors/zhipu-v2.png" alt="Zhipu AI" class="w-14 h-14 mx-auto mb-4 object-cover rounded-xl" />
-          <div class="text-xl font-bold text-gray-900 group-hover:text-gray-600 transition-colors">Zhipu AI</div>
+          <img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI" class="h-8 w-auto max-w-[160px] mx-auto mb-4 object-contain" />
           <div class="text-sm text-gray-600 mt-1">GLM</div>
         </a>
         <a href="https://www.minimaxi.com" target="_blank" class="glass-card glass-card-glow glow-border p-10 text-center transition-all group block">
-          <img src="/sponsors/minimax.png" alt="MiniMax" class="w-14 h-14 mx-auto mb-4 object-cover rounded-xl" />
-          <div class="text-xl font-bold text-gray-900 group-hover:text-gray-600 transition-colors">MiniMax</div>
+          <img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="h-8 w-auto max-w-[160px] mx-auto mb-4 object-contain" />
           <div class="text-sm text-gray-600 mt-1">MiniMax</div>
         </a>
         <a href="https://www.kimi.com" target="_blank" class="glass-card glass-card-glow glow-border p-10 text-center transition-all group block">
-          <img src="/sponsors/kimi.png" alt="Moonshot AI" class="w-14 h-14 mx-auto mb-4 object-cover rounded-xl" />
-          <div class="text-xl font-bold text-gray-900 group-hover:text-gray-600 transition-colors">Moonshot AI</div>
+          <img src="/sponsors/kimi-wide.webp" alt="Moonshot AI" class="h-8 w-auto max-w-[160px] mx-auto mb-4 object-contain" />
           <div class="text-sm text-gray-600 mt-1">Kimi</div>
         </a>
       </div>

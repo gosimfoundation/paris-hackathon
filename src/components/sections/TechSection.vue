@@ -4,9 +4,9 @@ import { useI18n } from '../../composables/useI18n'
 const { t, locale } = useI18n()
 
 const aiModels = [
-  { name: 'GLM', byEn: 'Zhipu AI', byZh: '智谱 AI', icon: '/sponsors/zhipu-v2.png', url: 'https://z.ai' },
-  { name: 'MiniMax', byEn: 'MiniMax', byZh: 'MiniMax', icon: '/sponsors/minimax.png', url: 'https://www.minimaxi.com' },
-  { name: 'Kimi', byEn: 'Moonshot AI', byZh: '月之暗面', icon: '/sponsors/kimi.png', url: 'https://www.kimi.com' },
+  { name: 'GLM', byEn: 'Zhipu AI', byZh: '智谱 AI', icon: '/sponsors/zhipu-wide.webp', url: 'https://z.ai' },
+  { name: 'MiniMax', byEn: 'MiniMax', byZh: 'MiniMax', icon: '/sponsors/minimax-wide.webp', url: 'https://www.minimaxi.com' },
+  { name: 'Kimi', byEn: 'Moonshot AI', byZh: '月之暗面', icon: '/sponsors/kimi-wide.webp', url: 'https://www.kimi.com' },
 ]
 
 const frameworks = [
@@ -34,7 +34,7 @@ const frameworks = [
       <div class="mb-16 reveal reveal-delay-2">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
           <a :href="model.url" target="_blank" v-for="model in aiModels" :key="model.name" class="glass-card glass-card-glow p-8 text-center hover:scale-105 transition-all group block">
-            <img :src="model.icon" :alt="model.name" class="w-14 h-14 mx-auto mb-3 object-cover rounded-xl" />
+            <img :src="model.icon" :alt="model.name" class="h-8 w-auto max-w-[140px] mx-auto mb-3 object-contain" />
             <div class="text-gray-600 text-sm mt-1">{{ locale === 'zh' ? model.byZh : model.byEn }}</div>
           </a>
         </div>
