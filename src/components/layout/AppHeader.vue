@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useI18n } from '../../composables/useI18n'
 import { useAuth } from '../../composables/useAuth'
 
 const { t, locale, toggleLocale } = useI18n()
-const { user, isLoggedIn, login, register, logout, error: authError } = useAuth()
+const { user, isLoggedIn, login, register, logout, error: authError, showAuthModal, authModalTab } = useAuth()
 
 const scrolled = ref(false)
 const mobileOpen = ref(false)
@@ -32,9 +32,7 @@ function scrollTo(href: string) {
 onMounted(() => window.addEventListener('scroll', onScroll))
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
-// Auth modal
-const showAuthModal = ref(false)
-const authTab = ref<'login' | 'register'>('login')
+// Auth modal uses shared state from useAuth (showAuthModal, authModalTab)
 
 // Login form
 const loginEmail = ref('')
@@ -55,19 +53,19 @@ const roleOptions = [
 
 const authLoading = ref(false)
 
-function openAuthModal(tab: 'login' | 'register' = 'login') {
-  authTab.value = tab
-  authError.value = ''
-  loginEmail.value = ''
-  loginPassword.value = ''
-  regName.value = ''
-  regEmail.value = ''
-  regPassword.value = ''
-  regGithubId.value = ''
-  regRole.value = ''
-  regLookingForTeam.value = false
-  showAuthModal.value = true
-}
+watch(showAuthModal, (open) => {
+  if (open) {
+    authError.value = ''
+    loginEmail.value = ''
+    loginPassword.value = ''
+    regName.value = ''
+    regEmail.value = ''
+    regPassword.value = ''
+    regGithubId.value = ''
+    regRole.value = ''
+    regLookingForTeam.value = false
+  }
+})
 
 async function submitLogin() {
   authLoading.value = true
@@ -158,15 +156,6 @@ const showUserDropdown = ref(false)
             </Transition>
           </div>
         </template>
-        <template v-else>
-          <button
-            @click="openAuthModal('login')"
-            class="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            Login
-          </button>
-        </template>
-
         <a
           href="#teams"
           class="px-5 py-2 bg-gray-900 text-white text-xs font-semibold tracking-widest uppercase hover:bg-gray-700 transition-colors"
@@ -219,12 +208,6 @@ const showUserDropdown = ref(false)
             Logout
           </button>
         </template>
-        <template v-else>
-          <button @click="openAuthModal('login'); mobileOpen = false" class="block py-3 text-gray-500 hover:text-gray-900 transition-colors text-sm">
-            Login
-          </button>
-        </template>
-
         <a href="#teams" class="mt-4 block text-center px-5 py-3 bg-gray-900 text-white text-xs font-semibold tracking-widest uppercase hover:bg-gray-700 transition-colors">
           {{ t('nav.applyNow') }}
         </a>
@@ -246,16 +229,16 @@ const showUserDropdown = ref(false)
           <!-- Tabs -->
           <div class="flex gap-6 mb-6 border-b border-gray-200">
             <button
-              @click="authTab = 'login'; authError = ''"
+              @click="authModalTab = 'login'; authError = ''"
               class="pb-3 text-sm font-semibold transition-colors border-b-2 -mb-px"
-              :class="authTab === 'login' ? 'text-gray-900 border-gray-900' : 'text-text-secondary border-transparent hover:text-gray-700'"
+              :class="authModalTab === 'login' ? 'text-gray-900 border-gray-900' : 'text-text-secondary border-transparent hover:text-gray-700'"
             >
               Login
             </button>
             <button
-              @click="authTab = 'register'; authError = ''"
+              @click="authModalTab = 'register'; authError = ''"
               class="pb-3 text-sm font-semibold transition-colors border-b-2 -mb-px"
-              :class="authTab === 'register' ? 'text-gray-900 border-gray-900' : 'text-text-secondary border-transparent hover:text-gray-700'"
+              :class="authModalTab === 'register' ? 'text-gray-900 border-gray-900' : 'text-text-secondary border-transparent hover:text-gray-700'"
             >
               Register
             </button>
@@ -264,7 +247,7 @@ const showUserDropdown = ref(false)
           <div v-if="authError" class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{{ authError }}</div>
 
           <!-- Login form -->
-          <form v-if="authTab === 'login'" @submit.prevent="submitLogin" class="space-y-5">
+          <form v-if="authModalTab === 'login'" @submit.prevent="submitLogin" class="space-y-5">
             <div>
               <label class="block text-sm text-text-secondary mb-1">Email <span class="text-accent-red">*</span></label>
               <input v-model="loginEmail" type="email" required placeholder="your@email.com" :class="inputClass" />
@@ -278,7 +261,7 @@ const showUserDropdown = ref(false)
             </button>
             <p class="text-center text-xs text-text-secondary">
               Don't have an account?
-              <button type="button" @click="authTab = 'register'; authError = ''" class="text-accent hover:underline">Register</button>
+              <button type="button" @click="authModalTab = 'register'; authError = ''" class="text-accent hover:underline">Register</button>
             </p>
           </form>
 
@@ -320,7 +303,7 @@ const showUserDropdown = ref(false)
             </button>
             <p class="text-center text-xs text-text-secondary">
               Already have an account?
-              <button type="button" @click="authTab = 'login'; authError = ''" class="text-accent hover:underline">Login</button>
+              <button type="button" @click="authModalTab = 'login'; authError = ''" class="text-accent hover:underline">Login</button>
             </p>
           </form>
         </div>

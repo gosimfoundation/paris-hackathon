@@ -25,6 +25,9 @@ const AUTH_KEY: InjectionKey<{
   updateProfile: (data: Partial<User>) => Promise<boolean>
   fetchMe: () => Promise<void>
   error: Ref<string>
+  showAuthModal: Ref<boolean>
+  authModalTab: Ref<'login' | 'register'>
+  promptAuth: (tab?: 'login' | 'register') => void
 }> = Symbol('auth')
 
 interface RegisterData {
@@ -44,6 +47,14 @@ const user = ref<User | null>(null)
 const token = ref<string | null>(localStorage.getItem('auth_token'))
 const isLoggedIn = ref(false)
 const error = ref('')
+const showAuthModal = ref(false)
+const authModalTab = ref<'login' | 'register'>('register')
+
+function promptAuth(tab: 'login' | 'register' = 'register') {
+  authModalTab.value = tab
+  error.value = ''
+  showAuthModal.value = true
+}
 
 function authHeaders(): Record<string, string> {
   return token.value ? { Authorization: `Bearer ${token.value}` } : {}
@@ -145,7 +156,7 @@ export function provideAuth() {
 
   onMounted(() => fetchMe())
 
-  const ctx = { user, token, isLoggedIn, register, login, logout, updateProfile, fetchMe, error }
+  const ctx = { user, token, isLoggedIn, register, login, logout, updateProfile, fetchMe, error, showAuthModal, authModalTab, promptAuth }
   provide(AUTH_KEY, ctx)
   return ctx
 }
@@ -154,8 +165,4 @@ export function useAuth() {
   const auth = inject(AUTH_KEY)
   if (!auth) throw new Error('useAuth() called without provideAuth()')
   return auth
-}
-
-export function authHeaders_standalone() {
-  return token.value ? { Authorization: `Bearer ${token.value}` } : {}
 }

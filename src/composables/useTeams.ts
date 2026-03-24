@@ -203,7 +203,7 @@ export function useTeams() {
       if (!res.ok) return false
       const data = await res.json()
       const team = teams.value.find(t => t.id === teamId)
-      if (team) team.likes = data.likes
+      if (team) team.likes = data.likes ?? data.team?.likes ?? team.likes + 1
       return true
     } catch { return false }
   }

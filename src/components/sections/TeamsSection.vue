@@ -6,7 +6,7 @@ import { useI18n } from '../../composables/useI18n'
 import { teamFilter } from '../../composables/useTeamFilter'
 
 const { t } = useI18n()
-const { user, isLoggedIn } = useAuth()
+const { user, isLoggedIn, promptAuth } = useAuth()
 
 const {
   teams, users, totalMembers, spotsLeft, isFull, progress,
@@ -339,9 +339,8 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
           </button>
         </template>
         <template v-else>
-          <p class="text-text-secondary text-sm mb-3">Login to create or join a team</p>
-          <button disabled class="px-8 py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase opacity-50 cursor-not-allowed">
-            {{ t('teams.registerBtn') }}
+          <button @click="promptAuth('register')" class="px-8 py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors">
+            {{ t('nav.applyNow') }}
           </button>
         </template>
       </div>
@@ -350,7 +349,7 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
       <div v-if="teamFilter" class="flex items-center gap-2 mb-6 reveal">
         <span class="text-sm text-text-secondary">Filtered by:</span>
         <button @click="teamFilter = ''" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold">
-          {{ teamFilter }}
+          {{ getTrackLabel(teamFilter) }}
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
@@ -460,7 +459,10 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
 
               <!-- Not logged in -->
               <div v-if="!isLoggedIn" class="text-center py-8">
-                <p class="text-text-secondary mb-4">Please register or login first to create a team.</p>
+                <p class="text-text-secondary mb-4">Register to create your team</p>
+                <button @click="showModal = false; promptAuth('register')" class="px-6 py-3 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors rounded-lg">
+                  Register
+                </button>
               </div>
 
               <!-- Logged in: create form -->
@@ -736,10 +738,10 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
                   {{ loading ? 'Joining...' : t('teams.joinBtn') }}
                 </button>
 
-                <!-- Not logged in prompt -->
-                <span v-else-if="!isLoggedIn && canJoin(viewingTeam)" class="flex-[2] py-3 text-center text-sm text-gray-400 border border-gray-200 rounded-lg">
-                  Login to join
-                </span>
+                <!-- Not logged in: register to join -->
+                <button v-else-if="!isLoggedIn && canJoin(viewingTeam)" @click="showModal = false; promptAuth('register')" class="flex-[2] py-3 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors rounded-lg">
+                  Register to Join
+                </button>
 
                 <!-- Locked -->
                 <span v-else-if="viewingTeam.locked" class="flex-[2] py-3 text-center text-sm text-gray-400 border border-gray-200 rounded-lg">
