@@ -1,13 +1,45 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useTeams, type Team } from '../../composables/useTeams'
+import { useAuth, type User } from '../../composables/useAuth'
+import { useI18n } from '../../composables/useI18n'
+import { teamFilter } from '../../composables/useTeamFilter'
 
-const API_BASE = ''
+const { t } = useI18n()
+const { user, isLoggedIn } = useAuth()
 
 const {
-  teams, totalMembers, spotsLeft, isFull, progress,
-  modelStats, loading, error, lastUpdated, fetchTeams, registerTeam, joinTeam
+  teams, users, totalMembers, spotsLeft, isFull, progress,
+  modelStats, loading, error, lastUpdated,
+  fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam
 } = useTeams()
+
+// Like tracking (localStorage)
+const likedTeams = ref<Set<string>>(new Set(JSON.parse(localStorage.getItem('likedTeams') || '[]')))
+
+async function handleLike(teamId: string, e: Event) {
+  e.stopPropagation()
+  if (likedTeams.value.has(teamId)) return
+  const ok = await likeTeam(teamId)
+  if (ok) {
+    likedTeams.value.add(teamId)
+    localStorage.setItem('likedTeams', JSON.stringify([...likedTeams.value]))
+  }
+}
+
+// Theme filter (shared)
+const filteredTeams = computed(() => {
+  if (!teamFilter.value) return teams.value
+  return teams.value.filter(team => (team.themes || []).some(th => th.includes(teamFilter.value)))
+})
+
+// Get members for a team from users array
+function getTeamMembers(teamId: string): User[] {
+  return users.value.filter(u => u.teamId === teamId)
+}
+
+// Hover detail
+const hoveredTeam = ref<string | null>(null)
 
 const toast = ref<{ msg: string; type: 'success' | 'error' } | null>(null)
 let toastTimer: number | undefined
@@ -27,53 +59,53 @@ function timeAgo(date: Date | null) {
 }
 
 const showModal = ref(false)
-const modalMode = ref<'create' | 'join'>('create')
-const joiningTeam = ref<Team | null>(null)
+const modalMode = ref<'create' | 'view' | 'edit'>('create')
+const viewingTeam = ref<Team | null>(null)
+const teamLocked = ref(false)
 
 const teamName = ref('')
-const contactEmail = ref('')
 const githubRepo = ref('')
-const memberCount = ref(1)
-const members = ref([{ name: '', role: '', githubId: '' }])
-const selectedTrack = ref('')
+const selectedTracks = ref<string[]>([])
 const selectedModel = ref('')
 const projectIdea = ref('')
 const teamAvatar = ref('')
-
-const joinName = ref('')
-const joinRole = ref('')
-const joinEmail = ref('')
-const joinGithubId = ref('')
+const maxSize = ref(3)
 
 const tracks = [
-  'AI Hardware / IoT',
-  'AI for Education',
-  'Human–Computer Interaction',
-  'Business Process Automation',
-  'Info Retrieval & Knowledge Agents',
+  { id: 'agents-meet-apps', label: 'Agents Meet Apps', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+  { id: 'claws-octos', label: 'Claws & Octos', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+  { id: 'hai', label: 'Human-Agent Interaction', icon: 'M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122' },
+  { id: 'education', label: 'Education', icon: 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5' },
+  { id: 'content-remix', label: 'Content Remixing', icon: 'M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z' },
+  { id: 'productivity', label: 'Productivity', icon: 'M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5' },
+  { id: 'agents-voices', label: 'Agents with Voices', icon: 'M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z' },
 ]
 
-const roleOptions = [
-  'AI Engineer', 'Full-Stack Developer', 'Frontend Developer', 'Backend Developer',
-  'Researcher', 'Designer', 'Product Manager', 'Student', 'Startup Founder', 'Other',
-]
+function toggleTrack(id: string) {
+  const idx = selectedTracks.value.indexOf(id)
+  if (idx >= 0) selectedTracks.value.splice(idx, 1)
+  else selectedTracks.value.push(id)
+}
+
+function getTrackIcon(trackId: string) {
+  return tracks.find(t => t.id === trackId || t.label === trackId)?.icon
+}
+
+function getTrackLabel(trackId: string) {
+  return tracks.find(t => t.id === trackId || t.label === trackId)?.label || trackId
+}
 
 const modelOptions = [
-  { id: 'GLM', label: 'GLM', icon: '/sponsors/zhipu.svg' },
-  { id: 'MiniMax', label: 'MiniMax', icon: '/sponsors/minimax.webp' },
-  { id: 'Kimi', label: 'Kimi', icon: '/sponsors/kimi.svg' },
+  { id: 'GLM', label: 'GLM', icon: '/sponsors/zhipu-v2.png' },
+  { id: 'MiniMax', label: 'MiniMax', icon: '/sponsors/minimax.png' },
+  { id: 'Kimi', label: 'Kimi', icon: '/sponsors/kimi.png' },
 ]
 
 const avatarPresets = [
-  { id: 'glm', label: 'GLM', src: '/sponsors/zhipu.svg' },
-  { id: 'minimax', label: 'MiniMax', src: '/sponsors/minimax.webp' },
-  { id: 'kimi', label: 'Kimi', src: '/sponsors/kimi.svg' },
+  { id: 'glm', label: 'GLM', src: '/sponsors/zhipu-v2.png' },
+  { id: 'minimax', label: 'MiniMax', src: '/sponsors/minimax.png' },
+  { id: 'kimi', label: 'Kimi', src: '/sponsors/kimi.png' },
 ]
-
-watch(memberCount, (n) => {
-  while (members.value.length < n) members.value.push({ name: '', role: '', githubId: '' })
-  while (members.value.length > n) members.value.pop()
-})
 
 function selectModel(id: string) {
   selectedModel.value = selectedModel.value === id ? '' : id
@@ -82,6 +114,8 @@ function selectModel(id: string) {
 function defaultAvatar(): string {
   return '/default-avatar.svg'
 }
+
+const API_BASE = ''
 
 async function uploadTeamAvatar(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -96,62 +130,113 @@ async function uploadTeamAvatar(event: Event) {
   } catch { showToast('Upload failed', 'error') }
 }
 
-function openCreateModal() {
-  modalMode.value = 'create'
+function resetForm() {
   teamName.value = ''
-  contactEmail.value = ''
   githubRepo.value = ''
-  memberCount.value = 1
-  members.value = [{ name: '', role: '', githubId: '' }]
-  selectedTrack.value = ''
+  selectedTracks.value = []
   selectedModel.value = ''
   projectIdea.value = ''
   teamAvatar.value = ''
+  teamLocked.value = false
+  maxSize.value = 3
+  error.value = ''
+}
+
+function openCreateModal() {
+  modalMode.value = 'create'
+  resetForm()
+  showModal.value = true
+}
+
+function openViewModal(team: Team) {
+  modalMode.value = 'view'
+  viewingTeam.value = team
   error.value = ''
   showModal.value = true
 }
 
-function openJoinModal(team: Team) {
-  if (team.members.length >= 3) return
-  modalMode.value = 'join'
-  joiningTeam.value = team
-  joinName.value = ''
-  joinRole.value = ''
-  joinEmail.value = ''
-  joinGithubId.value = ''
+function openEditModal() {
+  if (!viewingTeam.value) return
+  const team = viewingTeam.value
+  modalMode.value = 'edit'
+  teamName.value = team.name
+  githubRepo.value = team.githubRepo
+  selectedTracks.value = [...(team.themes || [])]
+  selectedModel.value = team.model || ''
+  projectIdea.value = team.projectIdea || ''
+  teamAvatar.value = team.avatar || ''
+  teamLocked.value = team.locked
+  maxSize.value = team.maxSize || 3
   error.value = ''
-  showModal.value = true
 }
 
 async function submitCreate() {
-  const ok = await registerTeam({
+  if (!isLoggedIn.value) return
+  const ok = await createTeam({
     name: teamName.value,
-    contactEmail: contactEmail.value,
-    githubRepo: githubRepo.value,
-    track: selectedTrack.value,
-    members: members.value.slice(0, memberCount.value),
-    models: selectedModel.value ? [selectedModel.value] : [],
-    projectIdea: projectIdea.value,
     avatar: teamAvatar.value || defaultAvatar(),
+    githubRepo: githubRepo.value,
+    themes: selectedTracks.value,
+    model: selectedModel.value,
+    projectIdea: projectIdea.value,
+    locked: teamLocked.value,
+    maxSize: maxSize.value,
   })
   if (ok) {
     showModal.value = false
-    showToast(`Team "${teamName.value}" registered! Good luck in Paris! 🎉`)
+    showToast(`Team "${teamName.value}" created! Good luck in Paris!`)
   }
 }
 
-async function submitJoin() {
-  if (!joiningTeam.value) return
-  const teamNameJoined = joiningTeam.value.name
-  const ok = await joinTeam(joiningTeam.value.id, {
-    name: joinName.value,
-    role: joinRole.value,
-    email: joinEmail.value,
-    githubId: joinGithubId.value,
+async function submitEdit() {
+  if (!viewingTeam.value) return
+  const ok = await editTeam(viewingTeam.value.id, {
+    name: teamName.value,
+    avatar: teamAvatar.value || defaultAvatar(),
+    githubRepo: githubRepo.value,
+    themes: selectedTracks.value,
+    model: selectedModel.value,
+    projectIdea: projectIdea.value,
+    locked: teamLocked.value,
+    maxSize: maxSize.value,
   })
   if (ok) {
     showModal.value = false
-    showToast(`You've joined "${teamNameJoined}"! See you in Paris! 🎉`)
+    showToast(`Team "${teamName.value}" updated!`)
+  }
+}
+
+async function handleJoinTeam(teamId: string, e?: Event) {
+  if (e) e.stopPropagation()
+  if (!isLoggedIn.value) return
+  const team = teams.value.find(t => t.id === teamId)
+  const ok = await joinTeam(teamId)
+  if (ok) {
+    showToast(`You've joined "${team?.name || 'the team'}"! See you in Paris!`)
+    // Refresh viewingTeam if in view modal
+    if (viewingTeam.value?.id === teamId) {
+      viewingTeam.value = teams.value.find(t => t.id === teamId) || null
+    }
+  }
+}
+
+async function handleLeaveTeam() {
+  if (!viewingTeam.value) return
+  const name = viewingTeam.value.name
+  const ok = await leaveTeam(viewingTeam.value.id)
+  if (ok) {
+    showModal.value = false
+    showToast(`You've left "${name}".`)
+  }
+}
+
+async function handleDeleteTeam() {
+  if (!viewingTeam.value) return
+  if (!confirm(`Delete team "${viewingTeam.value.name}"? This cannot be undone.`)) return
+  const ok = await deleteTeam(viewingTeam.value.id)
+  if (ok) {
+    showModal.value = false
+    showToast(`Team deleted.`)
   }
 }
 
@@ -159,12 +244,23 @@ function getModelIcon(model: string) {
   return modelOptions.find((o) => o.id === model)?.icon
 }
 
-function trackShort(track: string) {
-  return track.length > 20 ? track.slice(0, 18) + '...' : track
+function canJoin(team: Team) {
+  const members = getTeamMembers(team.id)
+  return !team.locked && members.length < (team.maxSize || 3) && !isFull.value
 }
 
-function canJoin(team: Team) {
-  return team.members.length < 3 && !isFull.value
+function isTeamMember(team: Team): boolean {
+  if (!user.value) return false
+  return user.value.teamId === team.id
+}
+
+function isTeamLeader(team: Team): boolean {
+  if (!user.value) return false
+  return team.leaderId === user.value.id
+}
+
+function userHasTeam(): boolean {
+  return !!user.value?.teamId
 }
 
 function teamVibe(count: number) {
@@ -202,14 +298,14 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
     <div class="max-w-7xl mx-auto px-6">
       <div class="text-center mb-12 reveal">
         <h2 class="text-4xl md:text-5xl font-bold">
-          Registered <span class="heading-serif accent-text">Teams</span>
+          {{ t('teams.title') }} <span class="heading-serif accent-text">{{ t('teams.titleAccent') }}</span>
         </h2>
-        <p class="text-text-secondary mt-3 text-sm">Click on a team to join, or create your own.</p>
+        <p class="text-text-secondary mt-3 text-sm">{{ t('teams.subtitle') }}</p>
         <div class="flex items-center justify-center gap-3 mt-3">
           <span class="text-xs text-text-secondary">Updated {{ timeAgo(lastUpdated) }}</span>
           <button @click="fetchTeams" class="text-xs text-blue-600 hover:text-gray-900 transition-colors flex items-center gap-1">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            Refresh
+            {{ t('teams.refresh') }}
           </button>
         </div>
       </div>
@@ -218,11 +314,11 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
       <div class="max-w-2xl mx-auto mb-12 reveal">
         <div class="flex justify-between text-sm mb-3">
           <span class="text-text-secondary">
-            <span class="text-gray-900 font-bold">{{ teams.length }}</span> teams ·
-            <span class="text-gray-900 font-bold">{{ totalMembers }}</span> participants
+            <span class="text-gray-900 font-bold">{{ teams.length }}</span> {{ t('teams.teams') }} ·
+            <span class="text-gray-900 font-bold">{{ totalMembers }}</span> {{ t('teams.participants') }}
           </span>
           <span class="text-text-secondary">
-            <span class="text-amber-600 font-bold">{{ spotsLeft }}</span> spots left
+            <span class="text-amber-600 font-bold">{{ spotsLeft }}</span> {{ t('teams.spotsLeft') }}
           </span>
         </div>
         <div class="w-full h-2 bg-gray-50 rounded-full overflow-hidden">
@@ -237,49 +333,113 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
       </div>
 
       <div class="text-center mb-12 reveal">
-        <button @click="openCreateModal" :disabled="isFull" class="px-8 py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          {{ isFull ? 'Registration Closed' : 'Register Your Team' }}
+        <template v-if="isLoggedIn">
+          <button @click="openCreateModal" :disabled="isFull || userHasTeam()" class="px-8 py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ isFull ? t('teams.closedBtn') : userHasTeam() ? 'Already in a team' : t('teams.registerBtn') }}
+          </button>
+        </template>
+        <template v-else>
+          <p class="text-text-secondary text-sm mb-3">Login to create or join a team</p>
+          <button disabled class="px-8 py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase opacity-50 cursor-not-allowed">
+            {{ t('teams.registerBtn') }}
+          </button>
+        </template>
+      </div>
+
+      <!-- Filter chips -->
+      <div v-if="teamFilter" class="flex items-center gap-2 mb-6 reveal">
+        <span class="text-sm text-text-secondary">Filtered by:</span>
+        <button @click="teamFilter = ''" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold">
+          {{ teamFilter }}
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
 
       <!-- Teams grid -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div v-for="team in teams" :key="team.id" @click="canJoin(team) && openJoinModal(team)" class="glass-card p-5 transition-all group" :class="canJoin(team) ? 'cursor-pointer hover:scale-[1.03] hover:border-accent-cyan/40' : ''">
+        <div
+          v-for="team in filteredTeams"
+          :key="team.id"
+          @click="openViewModal(team)"
+          @mouseenter="hoveredTeam = team.id"
+          @mouseleave="hoveredTeam = null"
+          class="glass-card p-5 transition-all group relative cursor-pointer hover:border-accent-cyan/40 flex flex-col"
+        >
+          <!-- Header: fixed -->
           <div class="flex items-center gap-3 mb-2">
             <img :src="team.avatar || '/default-avatar.svg'" class="w-10 h-10 rounded-full shrink-0 object-cover border border-gray-200" />
             <div class="min-w-0">
               <h3 class="font-bold text-gray-900 text-sm truncate group-hover:text-accent transition-colors">{{ team.name }}</h3>
-              <p class="text-text-secondary text-xs truncate">{{ trackShort(team.track) }}</p>
             </div>
           </div>
-          <div class="flex items-center gap-2 mb-1">
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-50 font-semibold" :class="teamVibe(team.members.length).color">{{ teamVibe(team.members.length).label }}</span>
-            <span v-if="canJoin(team)" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">+{{ 3 - team.members.length }} open</span>
+          <!-- Badges -->
+          <div class="flex flex-wrap items-center gap-1.5 mb-2">
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-50 font-semibold" :class="teamVibe(getTeamMembers(team.id).length).color">{{ teamVibe(getTeamMembers(team.id).length).label }}</span>
+            <span v-if="team.locked" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 inline-flex items-center gap-0.5">
+              <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+              Solo
+            </span>
+            <span v-else-if="canJoin(team)" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">+{{ (team.maxSize || 3) - getTeamMembers(team.id).length }} {{ t('teams.open') }}</span>
+            <template v-for="theme in (team.themes || [])" :key="theme">
+              <span v-if="getTrackIcon(theme)" class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600" :title="getTrackLabel(theme)">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" :d="getTrackIcon(theme)" /></svg>
+              </span>
+            </template>
           </div>
 
-          <div class="space-y-1.5">
-            <div v-for="member in team.members" :key="member.name" class="flex items-center gap-2">
-              <div class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></div>
+          <!-- Members: grows to fill -->
+          <div class="flex-1 space-y-1.5 mb-2">
+            <div v-for="member in getTeamMembers(team.id)" :key="member.id" class="flex items-center gap-2">
+              <img :src="member.avatar || '/default-avatar.svg'" class="w-4 h-4 rounded-full shrink-0 object-cover" />
               <span class="text-xs text-gray-700 truncate">{{ member.name }}</span>
-              <a v-if="member.githubId" :href="(member.githubId.includes('gitlab') ? 'https://gitlab.com/' : 'https://github.com/') + member.githubId.replace(/^@/, '')" target="_blank" @click.stop class="text-[10px] text-text-secondary hover:text-blue-600 transition-colors truncate">@{{ member.githubId.replace(/^@/, '') }}</a>
+              <span v-if="member.id === team.leaderId" class="text-[9px] text-amber-600 shrink-0">Lead</span>
+              <a v-if="member.githubId" :href="'https://github.com/' + member.githubId.replace(/^@/, '')" target="_blank" @click.stop class="text-[10px] text-text-secondary hover:text-blue-600 transition-colors truncate">@{{ member.githubId.replace(/^@/, '') }}</a>
             </div>
           </div>
 
-          <a v-if="team.githubRepo" :href="team.githubRepo" target="_blank" @click.stop class="inline-flex items-center gap-1 mt-2 text-[11px] text-text-secondary hover:text-blue-600 transition-colors">
-            <svg class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            {{ repoName(team.githubRepo) }}
-          </a>
+          <!-- Bottom: pinned -->
+          <div class="mt-auto">
+            <a v-if="team.githubRepo" :href="team.githubRepo" target="_blank" @click.stop class="inline-flex items-center gap-1 mb-2 text-[11px] text-text-secondary hover:text-blue-600 transition-colors">
+              <svg class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              {{ repoName(team.githubRepo) }}
+            </a>
 
-          <p v-if="team.projectIdea" class="text-[11px] text-text-secondary mt-2 line-clamp-2 italic">"{{ team.projectIdea }}"</p>
+            <div v-if="team.model" class="flex gap-1.5 mb-2">
+              <img v-if="getModelIcon(team.model)" :src="getModelIcon(team.model)" :alt="team.model" :title="team.model" class="w-4 h-4 rounded opacity-60 group-hover:opacity-100 transition-opacity" />
+            </div>
 
-          <div v-if="team.models?.length" class="flex gap-1.5 mt-3">
-            <img v-for="model in team.models" :key="model" :src="getModelIcon(model) || ''" :alt="model" :title="model" class="w-4 h-4 rounded opacity-60 group-hover:opacity-100 transition-opacity" />
+            <!-- Like button + count -->
+            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+            <button
+              @click="handleLike(team.id, $event)"
+              class="inline-flex items-center gap-1 text-xs transition-colors"
+              :class="likedTeams.has(team.id) ? 'text-red-500' : 'text-gray-400 hover:text-red-400'"
+            >
+              <svg class="w-4 h-4" :fill="likedTeams.has(team.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>
+              <span>{{ team.likes || 0 }}</span>
+            </button>
+            <span class="text-[10px] text-gray-300">{{ getTeamMembers(team.id).length }}/{{ team.maxSize || 3 }}</span>
           </div>
+          </div><!-- end mt-auto -->
+
+          <!-- Hover expanded details -->
+          <Transition
+            enter-active-class="transition-all duration-200"
+            enter-from-class="opacity-0 max-h-0"
+            enter-to-class="opacity-100 max-h-40"
+            leave-active-class="transition-all duration-150"
+            leave-from-class="opacity-100 max-h-40"
+            leave-to-class="opacity-0 max-h-0"
+          >
+            <div v-if="hoveredTeam === team.id && team.projectIdea" class="overflow-hidden mt-2 pt-2 border-t border-gray-100">
+              <p class="text-[11px] text-text-secondary leading-relaxed">"{{ team.projectIdea }}"</p>
+            </div>
+          </Transition>
         </div>
       </div>
 
       <div v-if="!teams.length" class="text-center py-16">
-        <p class="text-text-secondary">No teams registered yet. Be the first!</p>
+        <p class="text-text-secondary">{{ t('teams.noTeams') }}</p>
       </div>
     </div>
 
@@ -296,26 +456,131 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
 
             <!-- CREATE MODE -->
             <template v-if="modalMode === 'create'">
-              <h3 class="text-2xl font-bold text-gray-900 mb-6">Register Your Team</h3>
+              <h3 class="text-2xl font-bold text-gray-900 mb-6">{{ t('teams.createTitle') }}</h3>
+
+              <!-- Not logged in -->
+              <div v-if="!isLoggedIn" class="text-center py-8">
+                <p class="text-text-secondary mb-4">Please register or login first to create a team.</p>
+              </div>
+
+              <!-- Logged in: create form -->
+              <template v-else>
+                <div v-if="error" class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{{ error }}</div>
+
+                <form @submit.prevent="submitCreate" class="space-y-5">
+                  <div>
+                    <label class="block text-sm text-text-secondary mb-1">{{ t('teams.teamName') }} <span class="text-accent-red">*</span></label>
+                    <input v-model="teamName" type="text" required placeholder="e.g. AgentX" :class="inputClass" />
+                  </div>
+                  <!-- Team Avatar -->
+                  <div>
+                    <label class="block text-sm text-text-secondary mb-2">{{ t('teams.teamAvatar') }}</label>
+                    <div class="flex items-center gap-3">
+                      <div class="w-14 h-14 rounded-xl border-2 border-gray-200 overflow-hidden shrink-0 flex items-center justify-center bg-white">
+                        <img :src="teamAvatar || defaultAvatar()" class="max-w-[80%] max-h-[80%] object-contain" />
+                      </div>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <button v-for="preset in avatarPresets" :key="preset.id" type="button" @click="teamAvatar = preset.src" class="w-10 h-10 rounded-lg border-2 overflow-hidden transition-all flex items-center justify-center bg-white p-1" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-gray-200 hover:border-gray-300'">
+                          <img :src="preset.src" class="max-w-full max-h-full object-contain" />
+                        </button>
+                        <label class="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center cursor-pointer transition-all overflow-hidden" :class="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar) ? 'border-accent-red' : ''">
+                          <img v-if="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar)" :src="teamAvatar" class="w-full h-full object-cover" />
+                          <span v-else class="text-gray-500 text-sm">+</span>
+                          <input type="file" accept="image/*" class="hidden" @change="uploadTeamAvatar($event)" />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm text-text-secondary mb-1">{{ t('teams.githubRepo') }} <span class="text-accent-red">*</span></label>
+                    <input v-model="githubRepo" type="url" required placeholder="https://github.com/your-org/project" :class="inputClass" />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm text-text-secondary mb-2">{{ t('teams.track') }} <span class="text-text-secondary text-xs">(multi-select)</span></label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button
+                        v-for="track in tracks"
+                        :key="track.id"
+                        type="button"
+                        @click="toggleTrack(track.id)"
+                        class="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all text-sm"
+                        :class="selectedTracks.includes(track.id) ? 'bg-accent/10 border-accent/50 text-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-300'"
+                      >
+                        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" :d="track.icon" /></svg>
+                        <span class="truncate">{{ track.label }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm text-text-secondary mb-2">{{ t('teams.aiModels') }}</label>
+                    <div class="flex gap-3">
+                      <button v-for="model in modelOptions" :key="model.id" type="button" @click="selectModel(model.id)" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border transition-all" :class="selectedModel === model.id ? 'bg-accent/10 border-accent/50 text-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-300'">
+                        <img :src="model.icon" class="w-5 h-5 rounded" />
+                        <span class="text-sm font-semibold">{{ model.label }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm text-text-secondary mb-1">{{ t('teams.projectIdea') }} <span class="text-text-secondary text-xs">{{ t('teams.optional') }}</span></label>
+                    <textarea v-model="projectIdea" rows="2" placeholder="Briefly describe what you plan to build..." :class="[inputClass, 'resize-none']"></textarea>
+                  </div>
+
+                  <!-- Lock toggle -->
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <div class="relative">
+                      <input type="checkbox" v-model="teamLocked" class="sr-only peer" />
+                      <div class="w-9 h-5 bg-gray-200 rounded-full peer-checked:bg-accent transition-colors"></div>
+                      <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                    </div>
+                    <div>
+                      <span class="text-sm text-gray-900">{{ t('teams.lockTeam') }}</span>
+                      <p class="text-xs text-text-secondary">{{ t('teams.lockTeamDesc') }}</p>
+                    </div>
+                  </label>
+
+                  <!-- Max size -->
+                  <div>
+                    <label class="block text-sm text-text-secondary mb-1">Max team size</label>
+                    <div class="flex gap-3">
+                      <button v-for="n in 3" :key="n" type="button" @click="maxSize = n" class="flex-1 py-2.5 rounded-lg border font-semibold transition-all flex flex-col items-center gap-0.5" :class="maxSize === n ? 'bg-accent/10 border-accent/50 text-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-300'">
+                        <span>{{ n }}</span>
+                        <span class="text-[10px] font-normal opacity-70">{{ teamVibe(n).label }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button type="submit" :disabled="loading" class="w-full py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors disabled:opacity-50">
+                    {{ loading ? t('teams.submitting') : t('teams.submitBtn') }}
+                  </button>
+                </form>
+              </template>
+            </template>
+
+            <!-- EDIT MODE -->
+            <template v-else-if="modalMode === 'edit' && viewingTeam">
+              <h3 class="text-2xl font-bold text-gray-900 mb-6">Edit Team</h3>
               <div v-if="error" class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{{ error }}</div>
 
-              <form @submit.prevent="submitCreate" class="space-y-5">
+              <form @submit.prevent="submitEdit" class="space-y-5">
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Team Name <span class="text-accent-red">*</span></label>
+                  <label class="block text-sm text-text-secondary mb-1">{{ t('teams.teamName') }} <span class="text-accent-red">*</span></label>
                   <input v-model="teamName" type="text" required placeholder="e.g. AgentX" :class="inputClass" />
                 </div>
                 <!-- Team Avatar -->
                 <div>
-                  <label class="block text-sm text-text-secondary mb-2">Team Avatar</label>
+                  <label class="block text-sm text-text-secondary mb-2">{{ t('teams.teamAvatar') }}</label>
                   <div class="flex items-center gap-3">
-                    <div class="w-14 h-14 rounded-full border-2 border-gray-200 overflow-hidden shrink-0">
-                      <img :src="teamAvatar || defaultAvatar()" class="w-full h-full object-cover" />
+                    <div class="w-14 h-14 rounded-xl border-2 border-gray-200 overflow-hidden shrink-0 flex items-center justify-center bg-white">
+                      <img :src="teamAvatar || defaultAvatar()" class="max-w-[80%] max-h-[80%] object-contain" />
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                      <button v-for="preset in avatarPresets" :key="preset.id" type="button" @click="teamAvatar = preset.src" class="w-9 h-9 rounded-full border-2 overflow-hidden transition-all" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-gray-200 hover:border-gray-300'">
-                        <img :src="preset.src" class="w-full h-full object-cover" />
+                      <button v-for="preset in avatarPresets" :key="preset.id" type="button" @click="teamAvatar = preset.src" class="w-10 h-10 rounded-lg border-2 overflow-hidden transition-all flex items-center justify-center bg-white p-1" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-gray-200 hover:border-gray-300'">
+                        <img :src="preset.src" class="max-w-full max-h-full object-contain" />
                       </button>
-                      <label class="w-9 h-9 rounded-full border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center cursor-pointer transition-all overflow-hidden" :class="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar) ? 'border-accent-red' : ''">
+                      <label class="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center cursor-pointer transition-all overflow-hidden" :class="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar) ? 'border-accent-red' : ''">
                         <img v-if="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar)" :src="teamAvatar" class="w-full h-full object-cover" />
                         <span v-else class="text-gray-500 text-sm">+</span>
                         <input type="file" accept="image/*" class="hidden" @change="uploadTeamAvatar($event)" />
@@ -324,51 +589,29 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
                   </div>
                 </div>
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Contact Email <span class="text-accent-red">*</span></label>
-                  <input v-model="contactEmail" type="email" required placeholder="team-lead@example.com" :class="inputClass" />
-                  <p class="text-xs text-text-secondary mt-1">Not displayed publicly.</p>
-                </div>
-                <div>
-                  <label class="block text-sm text-text-secondary mb-1">GitHub Repository <span class="text-accent-red">*</span></label>
+                  <label class="block text-sm text-text-secondary mb-1">{{ t('teams.githubRepo') }} <span class="text-accent-red">*</span></label>
                   <input v-model="githubRepo" type="url" required placeholder="https://github.com/your-org/project" :class="inputClass" />
                 </div>
 
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Team Size <span class="text-accent-red">*</span></label>
-                  <div class="flex gap-3">
-                    <button v-for="n in 3" :key="n" type="button" @click="memberCount = n" class="flex-1 py-2.5 rounded-lg border font-semibold transition-all flex flex-col items-center gap-0.5" :class="memberCount === n ? 'bg-accent/10 border-accent/50 text-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-300'">
-                      <span>{{ n }}</span>
-                      <span class="text-[10px] font-normal opacity-70">{{ teamVibe(n).label }}</span>
+                  <label class="block text-sm text-text-secondary mb-2">{{ t('teams.track') }} <span class="text-text-secondary text-xs">(multi-select)</span></label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      v-for="track in tracks"
+                      :key="track.id"
+                      type="button"
+                      @click="toggleTrack(track.id)"
+                      class="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all text-sm"
+                      :class="selectedTracks.includes(track.id) ? 'bg-accent/10 border-accent/50 text-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-300'"
+                    >
+                      <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" :d="track.icon" /></svg>
+                      <span class="truncate">{{ track.label }}</span>
                     </button>
                   </div>
                 </div>
 
-                <!-- Members -->
                 <div>
-                  <label class="block text-sm text-text-secondary mb-2">Members <span class="text-accent-red">*</span></label>
-                  <div class="space-y-3">
-                    <div v-for="(_, i) in members.slice(0, memberCount)" :key="i" class="p-3 rounded-lg bg-gray-50 border border-gray-100">
-                      <p class="text-xs text-text-secondary mb-2">Member {{ i + 1 }} {{ i === 0 ? '(Team Lead)' : '' }}</p>
-                      <input v-model="members[i].name" type="text" required placeholder="Name" :class="inputClass" />
-                      <input v-model="members[i].githubId" type="text" required placeholder="GitHub or GitLab username (required)" :class="[inputClass, 'mt-2']" />
-                      <select v-model="members[i].role" :class="[inputClass, 'mt-2 appearance-none']">
-                        <option value="" class="bg-bg-primary text-text-secondary">Role (optional)</option>
-                        <option v-for="r in roleOptions" :key="r" :value="r" class="bg-bg-primary">{{ r }}</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm text-text-secondary mb-1">Track <span class="text-accent-red">*</span></label>
-                  <select v-model="selectedTrack" required :class="[inputClass, 'appearance-none']">
-                    <option value="" disabled class="bg-bg-primary">Select a track</option>
-                    <option v-for="t in tracks" :key="t" :value="t" class="bg-bg-primary">{{ t }}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label class="block text-sm text-text-secondary mb-2">AI Models You Plan to Use</label>
+                  <label class="block text-sm text-text-secondary mb-2">{{ t('teams.aiModels') }}</label>
                   <div class="flex gap-3">
                     <button v-for="model in modelOptions" :key="model.id" type="button" @click="selectModel(model.id)" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border transition-all" :class="selectedModel === model.id ? 'bg-accent/10 border-accent/50 text-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-300'">
                       <img :src="model.icon" class="w-5 h-5 rounded" />
@@ -378,50 +621,164 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
                 </div>
 
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Project Idea <span class="text-text-secondary text-xs">(optional)</span></label>
+                  <label class="block text-sm text-text-secondary mb-1">{{ t('teams.projectIdea') }} <span class="text-text-secondary text-xs">{{ t('teams.optional') }}</span></label>
                   <textarea v-model="projectIdea" rows="2" placeholder="Briefly describe what you plan to build..." :class="[inputClass, 'resize-none']"></textarea>
                 </div>
 
+                <!-- Lock toggle -->
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <div class="relative">
+                    <input type="checkbox" v-model="teamLocked" class="sr-only peer" />
+                    <div class="w-9 h-5 bg-gray-200 rounded-full peer-checked:bg-accent transition-colors"></div>
+                    <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                  </div>
+                  <div>
+                    <span class="text-sm text-gray-900">{{ t('teams.lockTeam') }}</span>
+                    <p class="text-xs text-text-secondary">{{ t('teams.lockTeamDesc') }}</p>
+                  </div>
+                </label>
+
+                <!-- Max size -->
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Max team size</label>
+                  <div class="flex gap-3">
+                    <button v-for="n in 3" :key="n" type="button" @click="maxSize = n" class="flex-1 py-2.5 rounded-lg border font-semibold transition-all flex flex-col items-center gap-0.5" :class="maxSize === n ? 'bg-accent/10 border-accent/50 text-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-300'">
+                      <span>{{ n }}</span>
+                      <span class="text-[10px] font-normal opacity-70">{{ teamVibe(n).label }}</span>
+                    </button>
+                  </div>
+                </div>
+
                 <button type="submit" :disabled="loading" class="w-full py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors disabled:opacity-50">
-                  {{ loading ? 'Registering...' : 'Submit Registration' }}
+                  {{ loading ? 'Saving...' : 'Save Changes' }}
                 </button>
               </form>
             </template>
 
-            <!-- JOIN MODE -->
-            <template v-else-if="modalMode === 'join' && joiningTeam">
-              <h3 class="text-2xl font-bold text-gray-900 mb-2">Join Team</h3>
-              <p class="text-accent font-semibold mb-1">{{ joiningTeam.name }}</p>
-              <p class="text-text-secondary text-sm mb-6">{{ joiningTeam.track }} · {{ joiningTeam.members.length }}/3 members</p>
+            <!-- VIEW MODE -->
+            <template v-else-if="modalMode === 'view' && viewingTeam">
+              <div class="flex items-center gap-4 mb-6">
+                <img :src="viewingTeam.avatar || '/default-avatar.svg'" class="w-16 h-16 rounded-xl object-cover border border-gray-200" />
+                <div>
+                  <h3 class="text-2xl font-bold text-gray-900">{{ viewingTeam.name }}</h3>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-sm text-text-secondary">{{ getTeamMembers(viewingTeam.id).length }}/{{ viewingTeam.maxSize || 3 }} members</span>
+                    <span v-if="viewingTeam.locked" class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 inline-flex items-center gap-0.5">
+                      <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+                      Locked
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-              <div v-if="error" class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{{ error }}</div>
+              <!-- Tracks -->
+              <div v-if="viewingTeam.themes?.length" class="flex flex-wrap gap-2 mb-4">
+                <span v-for="theme in viewingTeam.themes" :key="theme" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs text-gray-600">
+                  <svg v-if="getTrackIcon(theme)" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" :d="getTrackIcon(theme)" /></svg>
+                  {{ getTrackLabel(theme) }}
+                </span>
+              </div>
 
-              <form @submit.prevent="submitJoin" class="space-y-5">
-                <div>
-                  <label class="block text-sm text-text-secondary mb-1">Your Name <span class="text-accent-red">*</span></label>
-                  <input v-model="joinName" type="text" required placeholder="Your name" :class="inputClass" />
+              <!-- Model -->
+              <div v-if="viewingTeam.model" class="flex gap-2 mb-4">
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-xs text-gray-600">
+                  <img v-if="getModelIcon(viewingTeam.model)" :src="getModelIcon(viewingTeam.model)" class="w-4 h-4 rounded" />
+                  {{ viewingTeam.model }}
                 </div>
-                <div>
-                  <label class="block text-sm text-text-secondary mb-1">GitHub / GitLab Username <span class="text-accent-red">*</span></label>
-                  <input v-model="joinGithubId" type="text" required placeholder="e.g. octocat" :class="inputClass" />
-                </div>
-                <div>
-                  <label class="block text-sm text-text-secondary mb-1">Your Email <span class="text-accent-red">*</span></label>
-                  <input v-model="joinEmail" type="email" required placeholder="your@email.com" :class="inputClass" />
-                  <p class="text-xs text-text-secondary mt-1">Not displayed publicly.</p>
-                </div>
-                <div>
-                  <label class="block text-sm text-text-secondary mb-1">Your Role</label>
-                  <select v-model="joinRole" :class="[inputClass, 'appearance-none']">
-                    <option value="" class="bg-bg-primary text-text-secondary">Select role (optional)</option>
-                    <option v-for="r in roleOptions" :key="r" :value="r" class="bg-bg-primary">{{ r }}</option>
-                  </select>
-                </div>
+              </div>
 
-                <button type="submit" :disabled="loading" class="w-full py-4 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors disabled:opacity-50">
-                  {{ loading ? 'Joining...' : 'Join This Team' }}
+              <!-- Project Idea -->
+              <div v-if="viewingTeam.projectIdea" class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <p class="text-xs text-gray-400 uppercase tracking-wider mb-2 font-semibold">{{ t('teams.projectIdeaLabel') }}</p>
+                <p class="text-sm text-text-secondary leading-relaxed">"{{ viewingTeam.projectIdea }}"</p>
+              </div>
+
+              <!-- Members -->
+              <div class="mb-6">
+                <p class="text-xs text-gray-400 uppercase tracking-wider mb-3 font-semibold">{{ t('teams.membersLabel') }}</p>
+                <div class="space-y-3">
+                  <div v-for="member in getTeamMembers(viewingTeam.id)" :key="member.id" class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <img :src="member.avatar || '/default-avatar.svg'" class="w-8 h-8 rounded-full shrink-0 object-cover border border-gray-200" />
+                    <div class="flex-1 min-w-0">
+                      <span class="text-sm font-semibold text-gray-900">{{ member.name }}</span>
+                      <span v-if="member.id === viewingTeam.leaderId" class="text-[10px] text-amber-600 ml-1">{{ t('teams.lead') }}</span>
+                      <span v-if="member.role" class="text-xs text-text-secondary ml-2">{{ member.role }}</span>
+                    </div>
+                    <a v-if="member.githubId" :href="'https://github.com/' + member.githubId.replace(/^@/, '')" target="_blank" @click.stop class="text-xs text-text-secondary hover:text-blue-600 transition-colors">@{{ member.githubId.replace(/^@/, '') }}</a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- GitHub Repo -->
+              <a v-if="viewingTeam.githubRepo" :href="viewingTeam.githubRepo" target="_blank" @click.stop class="inline-flex items-center gap-2 mb-6 text-sm text-text-secondary hover:text-blue-600 transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                {{ viewingTeam.githubRepo }}
+              </a>
+
+              <!-- Action buttons -->
+              <div class="flex gap-3">
+                <button
+                  @click="handleLike(viewingTeam.id, $event)"
+                  class="flex-1 py-3 rounded-lg border transition-all flex items-center justify-center gap-2 text-sm"
+                  :class="likedTeams.has(viewingTeam.id) ? 'border-red-200 bg-red-50 text-red-500' : 'border-gray-200 text-text-secondary hover:border-gray-300'"
+                >
+                  <svg class="w-4 h-4" :fill="likedTeams.has(viewingTeam.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>
+                  {{ viewingTeam.likes || 0 }}
                 </button>
-              </form>
+
+                <!-- Join: logged in, team open, user has no team -->
+                <button
+                  v-if="isLoggedIn && canJoin(viewingTeam) && !userHasTeam()"
+                  @click="handleJoinTeam(viewingTeam.id)"
+                  :disabled="loading"
+                  class="flex-[2] py-3 bg-accent text-white text-sm font-semibold tracking-widest uppercase hover:bg-accent-hover transition-colors rounded-lg disabled:opacity-50"
+                >
+                  {{ loading ? 'Joining...' : t('teams.joinBtn') }}
+                </button>
+
+                <!-- Not logged in prompt -->
+                <span v-else-if="!isLoggedIn && canJoin(viewingTeam)" class="flex-[2] py-3 text-center text-sm text-gray-400 border border-gray-200 rounded-lg">
+                  Login to join
+                </span>
+
+                <!-- Locked -->
+                <span v-else-if="viewingTeam.locked" class="flex-[2] py-3 text-center text-sm text-gray-400 border border-gray-200 rounded-lg">
+                  {{ t('teams.notAccepting') }}
+                </span>
+              </div>
+
+              <!-- Member actions: leave -->
+              <div v-if="isLoggedIn && isTeamMember(viewingTeam) && !isTeamLeader(viewingTeam)" class="mt-3">
+                <button
+                  @click="handleLeaveTeam"
+                  :disabled="loading"
+                  class="w-full py-3 rounded-lg border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  {{ loading ? 'Leaving...' : 'Leave Team' }}
+                </button>
+              </div>
+
+              <!-- Leader actions: edit + delete -->
+              <div v-if="isLoggedIn && isTeamLeader(viewingTeam)" class="mt-3 flex gap-3">
+                <button
+                  @click="openEditModal"
+                  class="flex-1 py-3 rounded-lg border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Edit Team
+                </button>
+                <button
+                  @click="handleDeleteTeam"
+                  :disabled="loading"
+                  class="flex-1 py-3 rounded-lg border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  {{ loading ? 'Deleting...' : 'Delete Team' }}
+                </button>
+              </div>
+
+              <!-- Leader leave (dissolve note) -->
+              <div v-if="isLoggedIn && isTeamLeader(viewingTeam)" class="mt-2">
+                <p class="text-[11px] text-text-secondary text-center">As team leader, delete the team to leave.</p>
+              </div>
             </template>
           </div>
         </div>

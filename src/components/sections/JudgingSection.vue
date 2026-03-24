@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from '../../composables/useI18n'
+
+const { t } = useI18n()
 
 const animated = ref(false)
 
-const criteria = [
-  { name: 'Innovation', desc: 'Originality and novelty of the idea', color: 'bg-accent', icon: '01' },
-  { name: 'Technical Depth', desc: 'Architecture, code quality, technical complexity', color: 'bg-accent-blue', icon: '02' },
-  { name: 'Completeness', desc: 'Working demo, functional completeness', color: 'bg-accent-yellow', icon: '03' },
-  { name: 'Practicality', desc: 'Real-world problem-solving potential', color: 'bg-blue-500', icon: '04' },
-  { name: 'Presentation', desc: 'Clarity and persuasiveness of the demo', color: 'bg-accent', icon: '05' },
-]
+const colors = ['bg-accent', 'bg-accent-blue', 'bg-accent-yellow', 'bg-blue-500', 'bg-accent']
+
+const criteria = computed(() =>
+  (t('judging.criteria') as any[]).map((c: any, i: number) => ({
+    ...c,
+    color: colors[i],
+    icon: String(i + 1).padStart(2, '0'),
+  }))
+)
 
 onMounted(() => {
   const observer = new IntersectionObserver(
@@ -25,17 +30,17 @@ onMounted(() => {
   <section id="judging" class="relative py-32 bg-bg-secondary overflow-hidden">
     <div class="max-w-4xl mx-auto px-6">
       <div class="text-center mb-16 reveal">
-        <span class="text-accent-blue text-sm font-semibold uppercase tracking-wider">Equal Weight</span>
+        <span class="text-accent-blue text-sm font-semibold uppercase tracking-wider">{{ t('judging.eyebrow') }}</span>
         <h2 class="text-4xl md:text-5xl font-bold mt-4">
-          Judging <span class="heading-serif accent-text">Criteria</span>
+          {{ t('judging.title') }} <span class="heading-serif accent-text">{{ t('judging.titleAccent') }}</span>
         </h2>
-        <p class="text-text-secondary mt-4">Each dimension counts for 20% of the total score.</p>
+        <p class="text-text-secondary mt-4">{{ t('judging.desc') }}</p>
       </div>
 
       <div class="space-y-6">
         <div
           v-for="(c, i) in criteria"
-          :key="c.name"
+          :key="i"
           class="glass-card p-6 flex items-center gap-6 reveal"
           :class="`reveal-delay-${i % 4 + 1}`"
         >

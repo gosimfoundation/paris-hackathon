@@ -1,37 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from '../../composables/useI18n'
+
+const { t } = useI18n()
 
 const activeDay = ref<1 | 2>(1)
 
-const schedule = {
-  1: [
-    { time: '08:30–09:00', title: 'Check-in', desc: '' },
-    { time: '09:30–10:10', title: 'GOSIM Keynote', desc: '' },
-    { time: '10:30–11:00', title: 'Hackathon Opening', desc: 'Introduction, themes, judging criteria' },
-    { time: '11:00–12:00', title: 'Setup Session', desc: 'Dev environment, API access, toolchain setup, challenge topics revealed' },
-    { time: '12:00–13:00', title: 'Lunch + Team Formation', desc: '' },
-    { time: '13:00–18:00', title: 'Hacking', desc: '' },
-    { time: '18:00–18:30', title: 'Checkpoint', desc: '1-min team updates, mentor Q&A' },
-  ],
-  2: [
-    { time: '08:30–09:30', title: 'Check-in', desc: '' },
-    { time: '09:30–10:00', title: 'GOSIM Keynote', desc: '' },
-    { time: '10:00–12:00', title: 'Hacking Sprint', desc: 'Final push + demo prep' },
-    { time: '12:00–13:30', title: 'Demo & Presentations', desc: '5 min demo + 3 min Q&A per team' },
-    { time: '13:30–14:30', title: 'Judging', desc: '' },
-    { time: 'Afternoon', title: 'Awards Ceremony', desc: 'At GOSIM closing session' },
-    { time: '18:30–20:00', title: 'Dinner & Networking', desc: 'Winners, sponsors & judges' },
-  ],
-}
+const schedule = computed(() => t('schedule.items') as any)
 </script>
 
 <template>
   <section id="schedule" class="relative py-32 bg-bg-secondary overflow-hidden">
     <div class="max-w-4xl mx-auto px-6">
       <div class="text-center mb-16 reveal">
-        <span class="text-accent text-sm font-semibold uppercase tracking-wider">Two Intense Days</span>
+        <span class="text-accent text-sm font-semibold uppercase tracking-wider">{{ t('schedule.eyebrow') }}</span>
         <h2 class="text-4xl md:text-5xl font-bold mt-4">
-          <span class="heading-serif accent-text">Schedule</span>
+          <span class="heading-serif accent-text">{{ t('schedule.title') }}</span>
         </h2>
       </div>
 
@@ -46,7 +30,7 @@ const schedule = {
             ? 'bg-accent border-accent text-white'
             : 'border-gray-200 bg-transparent text-text-secondary hover:text-gray-900 hover:border-gray-300'"
         >
-          Day {{ day }} — May {{ day + 4 }} ({{ day === 1 ? 'Tuesday' : 'Wednesday' }})
+          {{ day === 1 ? t('schedule.day1') : t('schedule.day2') }}
         </button>
       </div>
 

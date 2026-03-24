@@ -1,104 +1,163 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-
-export interface TeamMember {
-  name: string
-  role: string
-  githubId: string
-}
+import type { User } from './useAuth'
 
 export interface Team {
   id: string
   name: string
-  track: string
-  members: TeamMember[]
-  models: string[]
-  projectIdea: string
-  githubRepo: string
+  leaderId: string
   avatar: string
+  githubRepo: string
+  themes: string[]
+  model: string
+  projectIdea: string
+  locked: boolean
+  maxSize: number
+  likes: number
+  members: User[]
   createdAt: string
 }
 
 const API_URL = '/api/teams'
 
 const teams = ref<Team[]>([])
-const totalMembers = ref(0)
-const maxParticipants = ref(100)
+const users = ref<User[]>([])
 const loading = ref(false)
 const error = ref('')
 const lastUpdated = ref<Date | null>(null)
 
 let pollTimer: number | undefined
 
+function getToken() {
+  return localStorage.getItem('auth_token')
+}
+
+function authHeaders(): Record<string, string> {
+  const t = getToken()
+  return t ? { Authorization: `Bearer ${t}` } : {}
+}
+
 export function useTeams() {
-  const spotsLeft = computed(() => maxParticipants.value - totalMembers.value)
+  const totalMembers = computed(() => users.value.filter(u => u.teamId).length)
+  const maxParticipants = ref(100)
+  const spotsLeft = computed(() => maxParticipants.value - users.value.length)
   const isFull = computed(() => spotsLeft.value <= 0)
-  const progress = computed(() => (totalMembers.value / maxParticipants.value) * 100)
+  const progress = computed(() => (users.value.length / maxParticipants.value) * 100)
 
   const modelStats = computed(() => {
     const stats: Record<string, number> = { GLM: 0, MiniMax: 0, Kimi: 0 }
     teams.value.forEach((t) => {
-      t.models?.forEach((m) => {
-        if (m in stats) stats[m]++
-      })
+      if (t.model && t.model in stats) stats[t.model]++
     })
     return stats
   })
 
   async function fetchTeams() {
     try {
-      const res = await fetch(API_URL)
-      if (!res.ok) throw new Error('Failed to fetch')
-      const data = await res.json()
-      teams.value = data.teams
-      totalMembers.value = data.totalMembers
-      maxParticipants.value = data.maxParticipants
+      const [teamsRes, usersRes] = await Promise.all([
+        fetch(API_URL),
+        fetch('/api/users'),
+      ])
+      if (teamsRes.ok) {
+        const data = await teamsRes.json()
+        teams.value = data.teams
+      }
+      if (usersRes.ok) {
+        const data = await usersRes.json()
+        users.value = data.users
+      }
       lastUpdated.value = new Date()
     } catch {
-      // silent fail on poll
+      // silent
     }
   }
 
-  async function registerTeam(payload: {
+  async function createTeam(payload: {
     name: string
-    contactEmail: string
-    githubRepo: string
-    track: string
-    members: TeamMember[]
-    models: string[]
-    projectIdea: string
     avatar: string
+    githubRepo: string
+    themes: string[]
+    model: string
+    projectIdea: string
+    locked: boolean
+    maxSize: number
   }) {
     loading.value = true
     error.value = ''
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) {
-        error.value = data.error || 'Registration failed'
+        error.value = data.error || 'Failed to create team'
         return false
       }
       await fetchTeams()
       return true
     } catch {
-      error.value = 'Network error, please try again'
+      error.value = 'Network error'
       return false
     } finally {
       loading.value = false
     }
   }
 
-  async function joinTeam(teamId: string, member: { name: string; role: string; email: string; githubId: string }) {
+  async function editTeam(teamId: string, payload: Record<string, any>) {
+    loading.value = true
+    error.value = ''
+    try {
+      const res = await fetch(`${API_URL}/${teamId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        error.value = data.error || 'Failed to edit team'
+        return false
+      }
+      await fetchTeams()
+      return true
+    } catch {
+      error.value = 'Network error'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function deleteTeam(teamId: string) {
+    loading.value = true
+    error.value = ''
+    try {
+      const res = await fetch(`${API_URL}/${teamId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        error.value = data.error || 'Failed to delete team'
+        return false
+      }
+      await fetchTeams()
+      return true
+    } catch {
+      error.value = 'Network error'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function joinTeam(teamId: string) {
     loading.value = true
     error.value = ''
     try {
       const res = await fetch(`${API_URL}/${teamId}/join`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(member),
+        headers: authHeaders(),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -108,11 +167,45 @@ export function useTeams() {
       await fetchTeams()
       return true
     } catch {
-      error.value = 'Network error, please try again'
+      error.value = 'Network error'
       return false
     } finally {
       loading.value = false
     }
+  }
+
+  async function leaveTeam(teamId: string) {
+    loading.value = true
+    error.value = ''
+    try {
+      const res = await fetch(`${API_URL}/${teamId}/leave`, {
+        method: 'POST',
+        headers: authHeaders(),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        error.value = data.error || 'Failed to leave team'
+        return false
+      }
+      await fetchTeams()
+      return true
+    } catch {
+      error.value = 'Network error'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function likeTeam(teamId: string) {
+    try {
+      const res = await fetch(`${API_URL}/${teamId}/like`, { method: 'POST' })
+      if (!res.ok) return false
+      const data = await res.json()
+      const team = teams.value.find(t => t.id === teamId)
+      if (team) team.likes = data.likes
+      return true
+    } catch { return false }
   }
 
   onMounted(() => {
@@ -125,7 +218,8 @@ export function useTeams() {
   })
 
   return {
-    teams, totalMembers, maxParticipants, spotsLeft, isFull, progress,
-    modelStats, loading, error, lastUpdated, fetchTeams, registerTeam, joinTeam,
+    teams, users, totalMembers, maxParticipants, spotsLeft, isFull, progress,
+    modelStats, loading, error, lastUpdated,
+    fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam,
   }
 }
