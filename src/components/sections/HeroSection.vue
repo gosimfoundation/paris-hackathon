@@ -46,7 +46,7 @@ const timeUnits = [
       <!-- Main title -->
       <h1 class="font-black leading-[0.9] mb-6 tracking-tight">
         <span class="block text-6xl md:text-8xl lg:text-[10rem] shimmer-text" style="font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em;">GOSIM</span>
-        <span class="block text-3xl md:text-5xl lg:text-7xl heading-serif font-medium text-gray-600 mt-2">Agentic App</span>
+        <span class="block text-3xl md:text-5xl lg:text-7xl heading-serif font-medium text-gray-600 mt-2">Agentic</span>
         <span class="block text-3xl md:text-5xl lg:text-7xl heading-serif font-medium text-gray-600">Hackathon</span>
       </h1>
 

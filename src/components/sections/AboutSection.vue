@@ -24,6 +24,9 @@ const { t } = useI18n()
         <div class="grid md:grid-cols-[1fr_auto] gap-10 items-start">
         <div class="space-y-6 text-text-secondary text-base leading-relaxed">
           <p>
+            {{ t('about.partOf') }} <a href="https://paris2026.gosim.org" target="_blank" class="text-gray-900 font-semibold hover:text-accent-blue transition-colors">{{ t('about.partOfEvent') }}</a>{{ t('about.partOfSuffix') }}
+          </p>
+          <p>
             {{ t('about.p1') }}
           </p>
           <p>
