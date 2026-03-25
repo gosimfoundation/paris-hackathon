@@ -73,7 +73,7 @@ const maxSize = ref(3)
 
 const tracks = [
   { id: 'agents-meet-apps', label: 'Agents Meet Apps', icon: '/icons/theme-01.svg' },
-  { id: 'claws-octos', label: 'Claws & Octos', icon: '/icons/theme-02.svg' },
+  { id: 'claws-octos', label: 'Claws & Octos', icon: '/icons/theme-02-v2.svg' },
   { id: 'hai', label: 'Human-Agent Interaction', icon: '/icons/theme-03.svg' },
   { id: 'education', label: 'Education', icon: '/icons/theme-04.svg' },
   { id: 'content-remix', label: 'Content Remixing', icon: '/icons/theme-05.svg' },

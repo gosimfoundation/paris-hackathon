@@ -7,7 +7,7 @@ const { t } = useI18n()
 
 const themeIconSrc: Record<string, string> = {
   '01': '/icons/theme-01.svg',
-  '02': '/icons/theme-02.svg',
+  '02': '/icons/theme-02-v2.svg',
   '03': '/icons/theme-03.svg',
   '04': '/icons/theme-04.svg',
   '05': '/icons/theme-05.svg',

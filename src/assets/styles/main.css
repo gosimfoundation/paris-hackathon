@@ -266,14 +266,14 @@ body {
 
 /* Theme icons - flattened emoji */
 .theme-icon {
-  filter: saturate(0.6) brightness(1.1);
-  opacity: 0.85;
-  transition: filter 0.3s, opacity 0.3s;
+  filter: saturate(0.85);
+  opacity: 1;
+  transition: filter 0.3s, transform 0.3s;
 }
 
 .group:hover .theme-icon {
-  filter: saturate(1) brightness(1);
-  opacity: 1;
+  filter: saturate(1);
+  transform: scale(1.1);
 }
 
 /* Countdown number tick */
