@@ -4,7 +4,7 @@ import { useI18n } from '../../composables/useI18n'
 import { useAuth } from '../../composables/useAuth'
 
 const { t, locale, toggleLocale } = useI18n()
-const { user, isLoggedIn, login, register, logout, error: authError, showAuthModal, authModalTab } = useAuth()
+const { user, isLoggedIn, login, register, logout, updateProfile, error: authError, showAuthModal, authModalTab } = useAuth()
 
 const scrolled = ref(false)
 const mobileOpen = ref(false)
@@ -89,7 +89,13 @@ async function submitRegister() {
     lookingForTeam: regLookingForTeam.value,
   })
   authLoading.value = false
-  if (ok) showAuthModal.value = false
+  if (ok) {
+    showAuthModal.value = false
+    // Guide new user to create/join a team
+    setTimeout(() => {
+      document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth' })
+    }, 300)
+  }
 }
 
 function handleLogout() {
@@ -101,6 +107,64 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
 
 // User dropdown
 const showUserDropdown = ref(false)
+
+// Profile edit modal
+const showProfileModal = ref(false)
+const profileName = ref('')
+const profileGithubId = ref('')
+const profileRole = ref('')
+const profileBio = ref('')
+const profileThemes = ref<string[]>([])
+const profilePreferredModel = ref('')
+const profileLookingForTeam = ref(false)
+const profileLoading = ref(false)
+
+const trackOptions = [
+  { id: 'agents-meet-apps', label: 'Agents Meet Apps' },
+  { id: 'claws-octos', label: 'Claws & Octos' },
+  { id: 'hai', label: 'Human-Agent Interaction' },
+  { id: 'education', label: 'Education' },
+  { id: 'content-remix', label: 'Content Remixing' },
+  { id: 'productivity', label: 'Productivity' },
+  { id: 'agents-voices', label: 'Agents with Voices' },
+]
+
+const modelChoices = ['GLM', 'MiniMax', 'Kimi']
+
+function openProfileModal() {
+  showUserDropdown.value = false
+  if (user.value) {
+    profileName.value = user.value.name
+    profileGithubId.value = user.value.githubId
+    profileRole.value = user.value.role
+    profileBio.value = user.value.bio || ''
+    profileThemes.value = [...(user.value.themes || [])]
+    profilePreferredModel.value = user.value.preferredModel || ''
+    profileLookingForTeam.value = user.value.lookingForTeam
+  }
+  showProfileModal.value = true
+}
+
+function toggleProfileTheme(id: string) {
+  const idx = profileThemes.value.indexOf(id)
+  if (idx >= 0) profileThemes.value.splice(idx, 1)
+  else profileThemes.value.push(id)
+}
+
+async function saveProfile() {
+  profileLoading.value = true
+  const ok = await updateProfile({
+    name: profileName.value,
+    githubId: profileGithubId.value,
+    role: profileRole.value,
+    bio: profileBio.value,
+    themes: profileThemes.value,
+    preferredModel: profilePreferredModel.value,
+    lookingForTeam: profileLookingForTeam.value,
+  })
+  profileLoading.value = false
+  if (ok) showProfileModal.value = false
+}
 </script>
 
 <template>
@@ -109,7 +173,7 @@ const showUserDropdown = ref(false)
     :class="scrolled ? 'bg-bg-primary/95 backdrop-blur-xl border-b border-gray-200 shadow-sm' : 'bg-transparent'"
   >
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-3 group">
+      <a href="https://gosim.org" target="_blank" class="flex items-center gap-3 group">
         <img src="/gosim-logo.svg" alt="GOSIM" class="h-7 w-auto" />
         <span class="text-xs text-gray-600 font-light tracking-widest uppercase">Hackathon</span>
       </a>
@@ -148,7 +212,10 @@ const showUserDropdown = ref(false)
               leave-from-class="opacity-100 scale-100"
               leave-to-class="opacity-0 scale-95"
             >
-              <div v-if="showUserDropdown" class="absolute right-0 top-full mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
+              <div v-if="showUserDropdown" class="absolute right-0 top-full mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
+                <button @click="openProfileModal" class="w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
+                  Edit Profile
+                </button>
                 <button @click="handleLogout(); showUserDropdown = false" class="w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
                   Logout
                 </button>
@@ -204,6 +271,9 @@ const showUserDropdown = ref(false)
             <img :src="user.avatar || '/default-avatar.svg'" class="w-7 h-7 rounded-full object-cover border border-gray-200" />
             <span class="text-sm text-gray-700 truncate">{{ user.name }}</span>
           </div>
+          <button @click="openProfileModal(); mobileOpen = false" class="block py-3 text-gray-500 hover:text-gray-900 transition-colors text-sm">
+            Edit Profile
+          </button>
           <button @click="handleLogout" class="block py-3 text-gray-500 hover:text-gray-900 transition-colors text-sm">
             Logout
           </button>
@@ -305,6 +375,88 @@ const showUserDropdown = ref(false)
               Already have an account?
               <button type="button" @click="authModalTab = 'login'; authError = ''" class="text-accent hover:underline">Login</button>
             </p>
+          </form>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- Profile Edit Modal -->
+  <Teleport to="body">
+    <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition-opacity duration-150" leave-from-class="opacity-100" leave-to-class="opacity-0">
+      <div v-if="showProfileModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showProfileModal = false"></div>
+
+        <div class="relative w-full max-w-md glass-card p-8 max-h-[90vh] overflow-y-auto border-accent-blue/20">
+          <button @click="showProfileModal = false" class="absolute top-4 right-4 text-text-secondary hover:text-gray-900">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+
+          <h3 class="text-lg font-bold text-gray-900 mb-6">Edit Profile</h3>
+
+          <div v-if="authError" class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{{ authError }}</div>
+
+          <form @submit.prevent="saveProfile" class="space-y-4">
+            <div>
+              <label class="block text-sm text-text-secondary mb-1">Name</label>
+              <input v-model="profileName" type="text" required :class="inputClass" />
+            </div>
+            <div>
+              <label class="block text-sm text-text-secondary mb-1">GitHub Username</label>
+              <input v-model="profileGithubId" type="text" :class="inputClass" />
+            </div>
+            <div>
+              <label class="block text-sm text-text-secondary mb-1">Role</label>
+              <select v-model="profileRole" :class="[inputClass, 'appearance-none']">
+                <option value="">Select role</option>
+                <option v-for="r in roleOptions" :key="r" :value="r">{{ r }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm text-text-secondary mb-1">Bio</label>
+              <textarea v-model="profileBio" rows="3" :class="inputClass" placeholder="Tell others about yourself..."></textarea>
+            </div>
+            <div>
+              <label class="block text-sm text-text-secondary mb-2">Interested Themes</label>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="track in trackOptions"
+                  :key="track.id"
+                  type="button"
+                  @click="toggleProfileTheme(track.id)"
+                  class="px-3 py-1.5 text-xs rounded-full border transition-colors"
+                  :class="profileThemes.includes(track.id) ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-400'"
+                >
+                  {{ track.label }}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm text-text-secondary mb-2">Preferred Model</label>
+              <div class="flex gap-3">
+                <button
+                  v-for="m in modelChoices"
+                  :key="m"
+                  type="button"
+                  @click="profilePreferredModel = profilePreferredModel === m ? '' : m"
+                  class="px-3 py-1.5 text-xs rounded-full border transition-colors"
+                  :class="profilePreferredModel === m ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-text-secondary hover:border-gray-400'"
+                >
+                  {{ m }}
+                </button>
+              </div>
+            </div>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <div class="relative">
+                <input type="checkbox" v-model="profileLookingForTeam" class="sr-only peer" />
+                <div class="w-9 h-5 bg-gray-200 rounded-full peer-checked:bg-emerald-500 transition-colors"></div>
+                <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+              </div>
+              <span class="text-sm text-gray-700">Looking for a team</span>
+            </label>
+            <button type="submit" :disabled="profileLoading" class="w-full py-3 bg-gray-900 text-white text-sm font-semibold tracking-widest uppercase hover:bg-gray-700 transition-colors disabled:opacity-50">
+              {{ profileLoading ? 'Saving...' : 'Save Profile' }}
+            </button>
           </form>
         </div>
       </div>

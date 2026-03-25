@@ -6,7 +6,12 @@ const { t } = useI18n()
 
 <template>
   <section class="relative py-24 bg-bg-primary overflow-hidden">
-    <div class="max-w-7xl mx-auto px-6">
+    <!-- Background: STATION F faded -->
+    <div
+      class="absolute inset-0 bg-cover bg-center opacity-10"
+      style="background-image: url('/photos/gosim-stationf.jpg');"
+    ></div>
+    <div class="relative max-w-7xl mx-auto px-6">
       <div class="grid md:grid-cols-2 gap-16 items-center">
         <!-- Left: text -->
         <div class="reveal">
@@ -56,14 +61,12 @@ const { t } = useI18n()
         <div class="relative overflow-hidden reveal">
           <div class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-bg-primary to-transparent z-10"></div>
           <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-bg-primary to-transparent z-10"></div>
-          <div class="flex gap-4 animate-marquee" style="animation-duration: 40s;">
+          <div class="flex gap-4 animate-marquee" style="animation-duration: 65s;">
             <template v-for="n in 2" :key="n">
-              <img src="/photos/gosim-event-1.jpg" alt="GOSIM Event" class="w-72 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-event-2.jpg" alt="GOSIM Event" class="w-80 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-event-3.jpg" alt="GOSIM Event" class="w-64 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-stationf.jpg" alt="STATION F" class="w-72 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-event-2.jpg" alt="GOSIM Event" class="w-64 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-event-1.jpg" alt="GOSIM Event" class="w-80 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-event-1.jpg" alt="GOSIM" class="w-72 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-event-4.jpg" alt="GOSIM" class="w-64 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-event-2.jpg" alt="GOSIM" class="w-72 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-event-3.jpg" alt="GOSIM" class="w-80 h-44 object-cover rounded-lg shrink-0" />
             </template>
           </div>
         </div>
@@ -72,14 +75,13 @@ const { t } = useI18n()
         <div class="relative overflow-hidden mt-4 reveal reveal-delay-1">
           <div class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-bg-primary to-transparent z-10"></div>
           <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-bg-primary to-transparent z-10"></div>
-          <div class="flex gap-4 animate-marquee-reverse" style="animation-duration: 45s;">
+          <div class="flex gap-4 animate-marquee-reverse" style="animation-duration: 70s;">
             <template v-for="n in 2" :key="n">
-              <img src="/photos/gosim-event-3.jpg" alt="GOSIM Event" class="w-80 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-stationf.jpg" alt="STATION F" class="w-64 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-event-1.jpg" alt="GOSIM Event" class="w-72 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-event-2.jpg" alt="GOSIM Event" class="w-80 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-event-3.jpg" alt="GOSIM Event" class="w-72 h-44 object-cover rounded-lg shrink-0" />
-              <img src="/photos/gosim-stationf.jpg" alt="STATION F" class="w-80 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-event-9.jpg" alt="GOSIM" class="w-72 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-event-5.jpg" alt="GOSIM" class="w-80 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-event-6.jpg" alt="GOSIM" class="w-64 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-stationf.jpg" alt="GOSIM" class="w-72 h-44 object-cover rounded-lg shrink-0" />
+              <img src="/photos/gosim-event-4.jpg" alt="GOSIM" class="w-80 h-44 object-cover rounded-lg shrink-0" />
             </template>
           </div>
         </div>

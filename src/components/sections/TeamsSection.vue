@@ -297,7 +297,7 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
   <section id="teams" class="relative py-32 bg-bg-secondary overflow-hidden">
     <div class="max-w-7xl mx-auto px-6">
       <div class="text-center mb-12 reveal">
-        <h2 class="text-4xl md:text-5xl font-bold">
+        <h2 class="text-4xl md:text-5xl heading-serif">
           {{ t('teams.title') }} <span class="heading-serif accent-text">{{ t('teams.titleAccent') }}</span>
         </h2>
         <p class="text-text-secondary mt-3 text-sm">{{ t('teams.subtitle') }}</p>
@@ -483,7 +483,7 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
                       </div>
                       <div class="flex flex-wrap items-center gap-2">
                         <button v-for="preset in avatarPresets" :key="preset.id" type="button" @click="teamAvatar = preset.src" class="w-10 h-10 rounded-lg border-2 overflow-hidden transition-all flex items-center justify-center bg-white p-1" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-gray-200 hover:border-gray-300'">
-                          <img :src="preset.src" class="max-w-full max-h-full object-contain" />
+                          <img :src="preset.src" class="max-w-full max-h-full object-contain rounded-lg" />
                         </button>
                         <label class="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center cursor-pointer transition-all overflow-hidden" :class="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar) ? 'border-accent-red' : ''">
                           <img v-if="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar)" :src="teamAvatar" class="w-full h-full object-cover" />
@@ -580,7 +580,7 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                       <button v-for="preset in avatarPresets" :key="preset.id" type="button" @click="teamAvatar = preset.src" class="w-10 h-10 rounded-lg border-2 overflow-hidden transition-all flex items-center justify-center bg-white p-1" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-gray-200 hover:border-gray-300'">
-                        <img :src="preset.src" class="max-w-full max-h-full object-contain" />
+                        <img :src="preset.src" class="max-w-full max-h-full object-contain rounded-lg" />
                       </button>
                       <label class="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center cursor-pointer transition-all overflow-hidden" :class="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar) ? 'border-accent-red' : ''">
                         <img v-if="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar)" :src="teamAvatar" class="w-full h-full object-cover" />

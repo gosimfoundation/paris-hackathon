@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTeams } from '../../composables/useTeams'
 import type { User } from '../../composables/useAuth'
 
-const { users, teams } = useTeams()
+const { users, teams, fetchTeams } = useTeams()
+
+// Always fetch on mount to ensure fresh data
+onMounted(() => fetchTeams())
 
 const tracks = [
   { id: 'agents-meet-apps', label: 'Agents Meet Apps', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
@@ -56,7 +59,7 @@ function openUserModal(user: User) {
     <div class="max-w-7xl mx-auto px-6">
       <!-- Header -->
       <div class="text-center mb-12 reveal">
-        <h2 class="text-4xl md:text-5xl font-bold">
+        <h2 class="text-4xl md:text-5xl heading-serif">
           All <span class="heading-serif accent-text">Participants</span>
         </h2>
         <p class="text-text-secondary mt-3 text-sm">Everyone registered for the hackathon</p>

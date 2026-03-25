@@ -11,7 +11,7 @@ const participants = computed(() => t('who.participants') as any[])
   <section class="relative py-32 bg-bg-secondary overflow-hidden">
     <div class="max-w-5xl mx-auto px-6">
       <div class="text-center mb-6 reveal">
-        <h2 class="text-4xl md:text-5xl font-bold">
+        <h2 class="text-4xl md:text-5xl heading-serif">
           {{ t('who.title') }} <span class="heading-serif accent-text">{{ t('who.titleAccent') }}</span>
         </h2>
         <p class="text-text-secondary mt-4 text-lg max-w-2xl mx-auto">

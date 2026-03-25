@@ -6,13 +6,19 @@ const { t } = useI18n()
 
 <template>
   <section id="about" class="relative py-32 bg-bg-primary overflow-hidden">
-    <!-- Background video with 4-edge fade -->
-    <div class="absolute inset-0 hidden md:block pointer-events-none" style="-webkit-mask-image: radial-gradient(ellipse 70% 60% at center, rgba(0,0,0,0.12) 0%, transparent 70%); mask-image: radial-gradient(ellipse 70% 60% at center, rgba(0,0,0,0.12) 0%, transparent 70%);">
+    <!-- Background video -->
+    <div class="absolute inset-0 hidden md:block pointer-events-none">
       <video
-        src="/photos/hero-video.mp4"
-        autoplay loop muted playsinline
-        class="w-full h-full object-cover"
+        src="/photos/hero-video-4k.mp4"
+        autoplay loop muted playsinline webkit-playsinline
+        preload="auto"
+        class="w-full h-full object-cover opacity-15"
       ></video>
+      <!-- Fade overlays -->
+      <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-bg-primary to-transparent"></div>
+      <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-bg-primary to-transparent"></div>
+      <div class="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-bg-primary to-transparent"></div>
+      <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-bg-primary to-transparent"></div>
     </div>
 
     <div class="relative max-w-4xl mx-auto px-6">
@@ -26,7 +32,7 @@ const { t } = useI18n()
 
       <!-- Upstream philosophy -->
       <div class="reveal reveal-delay-1">
-        <h2 class="text-4xl md:text-5xl font-bold text-center mb-10">
+        <h2 class="text-4xl md:text-5xl text-center mb-10">
           <span class="heading-serif accent-text">{{ t('about.title') }}</span>
         </h2>
 
@@ -53,7 +59,7 @@ const { t } = useI18n()
         <div class="hidden md:block shrink-0 reveal reveal-delay-2">
           <video
             src="/photos/art-loop.mp4"
-            autoplay loop muted playsinline
+            autoplay loop muted playsinline webkit-playsinline preload="auto"
             class="w-48 lg:w-56 rounded-2xl shadow-lg"
           ></video>
         </div>

@@ -29,8 +29,8 @@ const timeUnits = [
 
     <!-- Background photo -->
     <div
-      class="absolute inset-0 bg-cover bg-center opacity-8"
-      style="background-image: url('/photos/gosim-stationf.jpg')"
+      class="absolute inset-0 bg-cover bg-center opacity-20"
+      style="background-image: url('/photos/paris-tech.png');"
     ></div>
 
 
@@ -46,8 +46,8 @@ const timeUnits = [
 
       <!-- Main title -->
       <div class="mb-6">
-        <div class="shimmer-text text-6xl md:text-8xl lg:text-[10rem]" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; line-height: 0.9;">GOSIM</div>
-        <div class="heading-serif text-3xl md:text-5xl lg:text-7xl text-gray-600 mt-2">Agentic Hackathon</div>
+        <div class="shimmer-text text-6xl md:text-8xl lg:text-[10rem]" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; line-height: 0.9;">Upstream</div>
+        <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-gray-600 mt-4">Agentic Hackathon</div>
       </div>
 
       <!-- Tagline -->

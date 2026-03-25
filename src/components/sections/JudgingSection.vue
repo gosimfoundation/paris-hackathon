@@ -31,7 +31,7 @@ onMounted(() => {
     <div class="max-w-4xl mx-auto px-6">
       <div class="text-center mb-16 reveal">
         <span class="text-accent-blue text-sm font-semibold uppercase tracking-wider">{{ t('judging.eyebrow') }}</span>
-        <h2 class="text-4xl md:text-5xl font-bold mt-4">
+        <h2 class="text-4xl md:text-5xl mt-4">
           {{ t('judging.title') }} <span class="heading-serif accent-text">{{ t('judging.titleAccent') }}</span>
         </h2>
         <p class="text-text-secondary mt-4">{{ t('judging.desc') }}</p>

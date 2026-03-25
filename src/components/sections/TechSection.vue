@@ -13,7 +13,7 @@ const frameworks = [
   <section class="relative py-32 bg-bg-primary overflow-hidden">
     <div class="max-w-7xl mx-auto px-6">
       <div class="text-center mb-8 reveal">
-        <h2 class="text-4xl md:text-5xl font-bold">
+        <h2 class="text-4xl md:text-5xl heading-serif">
           {{ t('tech.title') }} <span class="heading-serif accent-text">{{ t('tech.titleAccent') }}</span>
         </h2>
       </div>
@@ -22,6 +22,20 @@ const frameworks = [
         <p class="text-text-secondary leading-relaxed">
           {{ t('tech.desc_prefix') }}<span class="text-gray-900 font-semibold">{{ t('tech.desc_bold') }}</span>{{ t('tech.desc_suffix') }}
         </p>
+      </div>
+
+      <!-- Sponsors -->
+      <h3 class="text-center text-sm text-text-secondary uppercase tracking-wider mb-6 reveal reveal-delay-2">{{ t('sponsors.title') }}</h3>
+      <div class="grid md:grid-cols-3 gap-8 mb-16 max-w-3xl mx-auto reveal reveal-delay-2">
+        <a href="https://z.ai/" target="_blank" class="glass-card glass-card-glow glow-border p-8 flex items-center justify-center transition-all group block h-28">
+          <img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI" class="h-14 w-auto max-w-[240px] object-contain" />
+        </a>
+        <a href="https://www.minimaxi.com" target="_blank" class="glass-card glass-card-glow glow-border p-8 flex items-center justify-center transition-all group block h-28">
+          <img src="/sponsors/minimax-logo.webp" alt="MiniMax" class="h-8 w-auto max-w-[180px] object-contain" />
+        </a>
+        <a href="https://www.kimi.com" target="_blank" class="glass-card glass-card-glow glow-border p-8 flex items-center justify-center transition-all group block h-28">
+          <img src="/sponsors/kimi-wide.webp" alt="Moonshot AI" class="h-8 w-auto max-w-[180px] object-contain" />
+        </a>
       </div>
 
       <!-- Frameworks -->

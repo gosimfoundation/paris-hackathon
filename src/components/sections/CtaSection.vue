@@ -9,7 +9,7 @@ const { t } = useI18n()
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[120px]"></div>
 
     <div class="relative max-w-3xl mx-auto px-6 text-center reveal">
-      <h2 class="text-4xl md:text-5xl font-bold mb-6">
+      <h2 class="text-4xl md:text-5xl mb-6">
         <span class="heading-serif accent-text">{{ t('cta.title') }}</span>
       </h2>
       <p class="text-text-secondary text-lg mb-2 heading-serif" style="font-style: italic;">

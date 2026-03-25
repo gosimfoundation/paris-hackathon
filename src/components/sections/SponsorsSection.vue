@@ -8,7 +8,7 @@ const { t } = useI18n()
   <section id="sponsors" class="relative py-32 bg-bg-primary overflow-hidden">
     <div class="max-w-5xl mx-auto px-6">
       <div class="text-center mb-16 reveal">
-        <h2 class="text-4xl md:text-5xl font-bold">
+        <h2 class="text-4xl md:text-5xl">
           <span class="heading-serif accent-text">{{ t('sponsors.title') }}</span>
         </h2>
       </div>

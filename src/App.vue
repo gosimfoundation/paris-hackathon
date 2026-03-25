@@ -14,7 +14,6 @@ import WhoSection from './components/sections/WhoSection.vue'
 import PrizesSection from './components/sections/PrizesSection.vue'
 import ScheduleSection from './components/sections/ScheduleSection.vue'
 import JudgingSection from './components/sections/JudgingSection.vue'
-import SponsorsSection from './components/sections/SponsorsSection.vue'
 import ParticipantsSection from './components/sections/ParticipantsSection.vue'
 import TeamsSection from './components/sections/TeamsSection.vue'
 import FaqSection from './components/sections/FaqSection.vue'
@@ -38,7 +37,6 @@ provideAuth()
     <PrizesSection />
     <ScheduleSection />
     <JudgingSection />
-    <SponsorsSection />
     <ParticipantsSection />
     <TeamsSection />
     <FaqSection />

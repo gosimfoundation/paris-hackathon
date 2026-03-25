@@ -38,10 +38,11 @@ function authHeaders(): Record<string, string> {
 
 export function useTeams() {
   const totalMembers = computed(() => users.value.filter(u => u.teamId).length)
+  const totalRegistered = computed(() => users.value.length)
   const maxParticipants = ref(100)
-  const spotsLeft = computed(() => maxParticipants.value - users.value.length)
+  const spotsLeft = computed(() => maxParticipants.value - totalMembers.value)
   const isFull = computed(() => spotsLeft.value <= 0)
-  const progress = computed(() => (users.value.length / maxParticipants.value) * 100)
+  const progress = computed(() => (totalMembers.value / maxParticipants.value) * 100)
 
   const modelStats = computed(() => {
     const stats: Record<string, number> = { GLM: 0, MiniMax: 0, Kimi: 0 }
@@ -218,7 +219,7 @@ export function useTeams() {
   })
 
   return {
-    teams, users, totalMembers, maxParticipants, spotsLeft, isFull, progress,
+    teams, users, totalMembers, totalRegistered, maxParticipants, spotsLeft, isFull, progress,
     modelStats, loading, error, lastUpdated,
     fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam,
   }
