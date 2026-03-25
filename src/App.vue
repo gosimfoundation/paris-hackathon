@@ -62,12 +62,12 @@ function copyUrlForChrome() {
     <AboutSection />
     <VenueSection />
     <TracksSection />
+    <TeamsSection />
     <TechSection />
     <PrizesSection />
     <ScheduleSection />
     <JudgingSection />
     <!-- <ParticipantsSection /> -->
-    <TeamsSection />
     <FaqSection />
     <CtaSection />
   </main>
