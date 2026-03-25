@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useScrollReveal } from './composables/useScrollReveal'
 import { useCardGlow } from './composables/useCardGlow'
 import { provideI18n } from './composables/useI18n'
@@ -10,7 +11,6 @@ import AboutSection from './components/sections/AboutSection.vue'
 import VenueSection from './components/sections/VenueSection.vue'
 import TracksSection from './components/sections/TracksSection.vue'
 import TechSection from './components/sections/TechSection.vue'
-import WhoSection from './components/sections/WhoSection.vue'
 import PrizesSection from './components/sections/PrizesSection.vue'
 import ScheduleSection from './components/sections/ScheduleSection.vue'
 import JudgingSection from './components/sections/JudgingSection.vue'
@@ -23,9 +23,23 @@ useScrollReveal()
 useCardGlow()
 provideI18n()
 provideAuth()
+
+const showSafariBanner = ref(false)
+onMounted(() => {
+  const ua = navigator.userAgent
+  const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua)
+  if (isSafari) showSafariBanner.value = true
+})
 </script>
 
 <template>
+  <!-- Safari banner -->
+  <Transition enter-active-class="transition-all duration-300" enter-from-class="opacity-0 -translate-y-full" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition-all duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-full">
+    <div v-if="showSafariBanner" class="fixed top-0 left-0 right-0 z-[200] bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-center gap-3 text-sm text-amber-800">
+      <span>For the best experience, we recommend using <strong>Chrome</strong> or <strong>Firefox</strong>.</span>
+      <button @click="showSafariBanner = false" class="text-amber-600 hover:text-amber-800 font-bold">Dismiss</button>
+    </div>
+  </Transition>
   <AppHeader />
   <main>
     <HeroSection />
@@ -33,7 +47,6 @@ provideAuth()
     <VenueSection />
     <TracksSection />
     <TechSection />
-    <WhoSection />
     <PrizesSection />
     <ScheduleSection />
     <JudgingSection />

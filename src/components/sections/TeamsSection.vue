@@ -9,7 +9,7 @@ const { t } = useI18n()
 const { user, isLoggedIn, promptAuth } = useAuth()
 
 const {
-  teams, users, totalMembers, spotsLeft, isFull, progress,
+  teams, users, totalMembers, totalRegistered, spotsLeft, isFull, progress,
   modelStats, loading, error, lastUpdated,
   fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam
 } = useTeams()
@@ -300,7 +300,8 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
         <h2 class="text-4xl md:text-5xl heading-serif">
           {{ t('teams.title') }} <span class="heading-serif accent-text">{{ t('teams.titleAccent') }}</span>
         </h2>
-        <p class="text-text-secondary mt-3 text-sm">{{ t('teams.subtitle') }}</p>
+        <p class="text-text-secondary mt-3 text-base">{{ t('teams.subtitle') }}</p>
+        <p class="text-amber-600 mt-2 text-sm font-semibold">{{ t('teams.registerNote') }}</p>
         <div class="flex items-center justify-center gap-3 mt-3">
           <span class="text-xs text-text-secondary">Updated {{ timeAgo(lastUpdated) }}</span>
           <button @click="fetchTeams" class="text-xs text-blue-600 hover:text-gray-900 transition-colors flex items-center gap-1">
@@ -315,7 +316,8 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
         <div class="flex justify-between text-sm mb-3">
           <span class="text-text-secondary">
             <span class="text-gray-900 font-bold">{{ teams.length }}</span> {{ t('teams.teams') }} ·
-            <span class="text-gray-900 font-bold">{{ totalMembers }}</span> {{ t('teams.participants') }}
+            <span class="text-gray-900 font-bold">{{ totalMembers }}</span> in teams ·
+            <span class="text-gray-900 font-bold">{{ totalRegistered }}</span> registered
           </span>
           <span class="text-text-secondary">
             <span class="text-amber-600 font-bold">{{ spotsLeft }}</span> {{ t('teams.spotsLeft') }}

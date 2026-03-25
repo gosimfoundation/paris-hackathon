@@ -199,6 +199,7 @@ export default {
     title: 'Registered',
     titleAccent: 'Teams',
     subtitle: 'Click on a team to join, or create your own.',
+    registerNote: 'You must join or create a team to complete your registration.',
     refresh: 'Refresh',
     teams: 'teams',
     participants: 'participants',
@@ -249,7 +250,7 @@ export default {
     eyebrow: 'Questions?',
     title: 'FAQ',
     items: [
-      { q: 'Who can participate?', a: 'The hackathon is open to AI engineers, open-source contributors, startup founders, researchers, indie developers, students, and creators from around the world.' },
+      { q: 'Who can participate?', a: 'AI engineers, open-source contributors, startup founders, researchers, indie developers, students, and creators from around the world. Whether you\'re building your first agent or your fiftieth — if you build, you belong here.' },
       { q: 'How big can teams be?', a: 'Teams of 1–3 people. You can come solo and find teammates during the lunch & team formation session on Day 1.' },
       { q: 'What do I need to submit?', a: 'A working demo, a GitHub repository, and a short slide deck. You\'ll have 5 minutes to present plus 3 minutes for Q&A.' },
       { q: 'Do I have to use a specific AI model?', a: 'You\'re encouraged to use the sponsor-provided models (GLM, MiniMax, Kimi) — all participants get free API credits. But you can also use other models or frameworks.' },

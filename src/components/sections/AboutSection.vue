@@ -1,7 +1,23 @@
 <script setup lang="ts">
 import { useI18n } from '../../composables/useI18n'
+import { ref, onMounted } from 'vue'
 
 const { t } = useI18n()
+
+const bgVideoRef = ref<HTMLVideoElement | null>(null)
+const artVideoRef = ref<HTMLVideoElement | null>(null)
+
+// Force play videos (Safari workaround)
+onMounted(() => {
+  [bgVideoRef.value, artVideoRef.value].forEach(v => {
+    if (v) {
+      v.play().catch(() => {
+        // Safari may block, try again on user interaction
+        document.addEventListener('click', () => v.play().catch(() => {}), { once: true })
+      })
+    }
+  })
+})
 </script>
 
 <template>
@@ -9,6 +25,7 @@ const { t } = useI18n()
     <!-- Background video -->
     <div class="absolute inset-0 hidden md:block pointer-events-none">
       <video
+        ref="bgVideoRef"
         src="/photos/hero-video-4k.mp4"
         autoplay loop muted playsinline webkit-playsinline
         preload="auto"
@@ -59,6 +76,7 @@ const { t } = useI18n()
         <div class="hidden md:block shrink-0 reveal reveal-delay-2">
           <video
             src="/photos/art-loop.mp4"
+            ref="artVideoRef"
             autoplay loop muted playsinline webkit-playsinline preload="auto"
             class="w-48 lg:w-56 rounded-2xl shadow-lg"
           ></video>
