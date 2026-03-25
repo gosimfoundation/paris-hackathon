@@ -301,7 +301,7 @@ const inputClass = 'w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-
           {{ t('teams.title') }} <span class="heading-serif accent-text">{{ t('teams.titleAccent') }}</span>
         </h2>
         <p class="text-text-secondary mt-3 text-base">{{ t('teams.subtitle') }}</p>
-        <p class="text-amber-600 mt-2 text-sm font-semibold">{{ t('teams.registerNote') }}</p>
+        <p class="text-amber-600 mt-2 text-sm font-semibold animate-pulse">{{ t('teams.registerNote') }}</p>
         <div class="flex items-center justify-center gap-3 mt-3">
           <span class="text-xs text-text-secondary">Updated {{ timeAgo(lastUpdated) }}</span>
           <button @click="fetchTeams" class="text-xs text-blue-600 hover:text-gray-900 transition-colors flex items-center gap-1">
