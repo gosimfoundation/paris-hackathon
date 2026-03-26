@@ -4,6 +4,7 @@ import { useI18n } from '../../composables/useI18n'
 import { useAuth } from '../../composables/useAuth'
 import { useTheme } from '../../composables/useTheme'
 import { useTeams } from '../../composables/useTeams'
+import { assetUrl } from '../../composables/api'
 
 const { t, locale, toggleLocale } = useI18n()
 const { user, isLoggedIn, login, register, logout, updateProfile, error: authError, showAuthModal, authModalTab } = useAuth()
@@ -254,7 +255,7 @@ async function saveProfile() {
         <template v-if="isLoggedIn && user">
           <div class="relative">
             <button @click="showUserDropdown = !showUserDropdown" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
-              <img :src="user.avatar || '/default-avatar.svg'" class="w-7 h-7 rounded-full object-cover border border-border" />
+              <img :src="assetUrl(user.avatar) || '/default-avatar.svg'" class="w-7 h-7 rounded-full object-cover border border-border" />
               <span class="max-w-[80px] truncate">{{ user.name }}</span>
             </button>
             <Transition
@@ -328,7 +329,7 @@ async function saveProfile() {
         <!-- Mobile user area -->
         <template v-if="isLoggedIn && user">
           <div class="flex items-center gap-2 py-3 border-t border-border-subtle mt-2">
-            <img :src="user.avatar || '/default-avatar.svg'" class="w-7 h-7 rounded-full object-cover border border-border" />
+            <img :src="assetUrl(user.avatar) || '/default-avatar.svg'" class="w-7 h-7 rounded-full object-cover border border-border" />
             <span class="text-sm text-text-secondary truncate">{{ user.name }}</span>
           </div>
           <button @click="openProfileModal(); mobileOpen = false" class="block py-3 text-text-tertiary hover:text-text-primary transition-colors text-sm">
