@@ -72,13 +72,13 @@ const teamAvatar = ref('')
 const maxSize = ref(3)
 
 const tracks = [
-  { id: 'agents-meet-apps', label: 'Agents Meet Apps', icon: '/icons/theme-01.svg' },
-  { id: 'claws-octos', label: 'Claws & Octos', icon: '/icons/theme-02-v2.svg' },
-  { id: 'hai', label: 'Human-Agent Interaction', icon: '/icons/theme-03.svg' },
-  { id: 'education', label: 'Education', icon: '/icons/theme-04.svg' },
-  { id: 'content-remix', label: 'Content Remixing', icon: '/icons/theme-05.svg' },
-  { id: 'productivity', label: 'Productivity', icon: '/icons/theme-06.svg' },
-  { id: 'agents-voices', label: 'Agents with Voices', icon: '/icons/theme-07.svg' },
+  { id: 'agents-meet-apps', label: 'Agents Meet Apps', icon: assetUrl('/icons/theme-01.svg') },
+  { id: 'claws-octos', label: 'Claws & Octos', icon: assetUrl('/icons/theme-02-v2.svg') },
+  { id: 'hai', label: 'Human-Agent Interaction', icon: assetUrl('/icons/theme-03.svg') },
+  { id: 'education', label: 'Education', icon: assetUrl('/icons/theme-04.svg') },
+  { id: 'content-remix', label: 'Content Remixing', icon: assetUrl('/icons/theme-05.svg') },
+  { id: 'productivity', label: 'Productivity', icon: assetUrl('/icons/theme-06.svg') },
+  { id: 'agents-voices', label: 'Agents with Voices', icon: assetUrl('/icons/theme-07.svg') },
 ]
 
 function toggleTrack(id: string) {
@@ -96,15 +96,15 @@ function getTrackLabel(trackId: string) {
 }
 
 const modelOptions = [
-  { id: 'GLM', label: 'GLM', icon: '/sponsors/zhipu-v2.png' },
-  { id: 'MiniMax', label: 'MiniMax', icon: '/sponsors/minimax.png' },
-  { id: 'Kimi', label: 'Kimi', icon: '/sponsors/kimi.png' },
+  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
+  { id: 'MiniMax', label: 'MiniMax', icon: assetUrl('/sponsors/minimax.png') },
+  { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi.png') },
 ]
 
 const avatarPresets = [
-  { id: 'glm', label: 'GLM', src: '/sponsors/zhipu-v2.png' },
-  { id: 'minimax', label: 'MiniMax', src: '/sponsors/minimax.png' },
-  { id: 'kimi', label: 'Kimi', src: '/sponsors/kimi.png' },
+  { id: 'glm', label: 'GLM', src: assetUrl('/sponsors/zhipu-v2.png') },
+  { id: 'minimax', label: 'MiniMax', src: assetUrl('/sponsors/minimax.png') },
+  { id: 'kimi', label: 'Kimi', src: assetUrl('/sponsors/kimi.png') },
 ]
 
 function selectModel(id: string) {
@@ -112,7 +112,7 @@ function selectModel(id: string) {
 }
 
 function defaultAvatar(): string {
-  return '/default-avatar.svg'
+  return assetUrl('/default-avatar.svg')
 }
 
 import { API_BASE, assetUrl } from '../../composables/api'

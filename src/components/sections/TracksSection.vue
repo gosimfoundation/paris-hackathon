@@ -2,17 +2,18 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '../../composables/useI18n'
 import { setTeamFilter } from '../../composables/useTeamFilter'
+import { assetUrl } from '../../composables/api'
 
 const { t } = useI18n()
 
 const themeIconSrc: Record<string, string> = {
-  '01': '/icons/theme-01.svg',
-  '02': '/icons/theme-02-v2.svg',
-  '03': '/icons/theme-03.svg',
-  '04': '/icons/theme-04.svg',
-  '05': '/icons/theme-05.svg',
-  '06': '/icons/theme-06.svg',
-  '07': '/icons/theme-07.svg',
+  '01': assetUrl('/icons/theme-01.svg'),
+  '02': assetUrl('/icons/theme-02-v2.svg'),
+  '03': assetUrl('/icons/theme-03.svg'),
+  '04': assetUrl('/icons/theme-04.svg'),
+  '05': assetUrl('/icons/theme-05.svg'),
+  '06': assetUrl('/icons/theme-06.svg'),
+  '07': assetUrl('/icons/theme-07.svg'),
 }
 
 // Map theme number to track id used in team registration

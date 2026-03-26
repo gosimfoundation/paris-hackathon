@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTeams } from '../../composables/useTeams'
 import { assetUrl } from '../../composables/api'
+
+
 import type { User } from '../../composables/useAuth'
 
 const { users, teams, fetchTeams } = useTeams()
@@ -10,19 +12,19 @@ const { users, teams, fetchTeams } = useTeams()
 onMounted(() => fetchTeams())
 
 const tracks = [
-  { id: 'agents-meet-apps', label: 'Agents Meet Apps', icon: '/icons/theme-01.svg' },
-  { id: 'claws-octos', label: 'Claws & Octos', icon: '/icons/theme-02-v2.svg' },
-  { id: 'hai', label: 'Human-Agent Interaction', icon: '/icons/theme-03.svg' },
-  { id: 'education', label: 'Education', icon: '/icons/theme-04.svg' },
-  { id: 'content-remix', label: 'Content Remixing', icon: '/icons/theme-05.svg' },
-  { id: 'productivity', label: 'Productivity', icon: '/icons/theme-06.svg' },
-  { id: 'agents-voices', label: 'Agents with Voices', icon: '/icons/theme-07.svg' },
+  { id: 'agents-meet-apps', label: 'Agents Meet Apps', icon: assetUrl('/icons/theme-01.svg') },
+  { id: 'claws-octos', label: 'Claws & Octos', icon: assetUrl('/icons/theme-02-v2.svg') },
+  { id: 'hai', label: 'Human-Agent Interaction', icon: assetUrl('/icons/theme-03.svg') },
+  { id: 'education', label: 'Education', icon: assetUrl('/icons/theme-04.svg') },
+  { id: 'content-remix', label: 'Content Remixing', icon: assetUrl('/icons/theme-05.svg') },
+  { id: 'productivity', label: 'Productivity', icon: assetUrl('/icons/theme-06.svg') },
+  { id: 'agents-voices', label: 'Agents with Voices', icon: assetUrl('/icons/theme-07.svg') },
 ]
 
 const modelOptions = [
-  { id: 'GLM', label: 'GLM', icon: '/sponsors/zhipu-v2.png' },
-  { id: 'MiniMax', label: 'MiniMax', icon: '/sponsors/minimax.png' },
-  { id: 'Kimi', label: 'Kimi', icon: '/sponsors/kimi.png' },
+  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
+  { id: 'MiniMax', label: 'MiniMax', icon: assetUrl('/sponsors/minimax.png') },
+  { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi.png') },
 ]
 
 const totalRegistered = computed(() => users.value.length)

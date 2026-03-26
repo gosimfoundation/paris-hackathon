@@ -212,7 +212,7 @@ async function saveProfile() {
   >
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
       <a href="https://gosim.org" target="_blank" class="flex items-center gap-3 group">
-        <img :src="isDark ? '/gosim-logo-white.svg' : '/gosim-logo.svg'" alt="GOSIM" class="h-7 w-auto" />
+        <img :src="isDark ? assetUrl('/gosim-logo-white.svg') : assetUrl('/gosim-logo.svg')" alt="GOSIM" class="h-7 w-auto" />
         <span class="text-xs text-text-tertiary font-light tracking-widest uppercase">Hackathon</span>
       </a>
 
