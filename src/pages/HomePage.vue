@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useScrollReveal } from '../composables/useScrollReveal'
 import { useCardGlow } from '../composables/useCardGlow'
+import { useVideoAutoplay } from '../composables/useVideoAutoplay'
 import HeroSection from '../components/sections/HeroSection.vue'
 import AboutSection from '../components/sections/AboutSection.vue'
 import VenueSection from '../components/sections/VenueSection.vue'
@@ -16,6 +17,7 @@ import CtaSection from '../components/sections/CtaSection.vue'
 
 useScrollReveal()
 useCardGlow()
+useVideoAutoplay()
 
 const showSafariBanner = ref(false)
 const copied = ref(false)
