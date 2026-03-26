@@ -1,14 +1,14 @@
-// When running on GH Pages or other static hosts, point to macmini backend.
-// On macmini itself (paris.mofa.ai), use relative paths.
 const isLocalBackend = typeof window !== 'undefined' && window.location.hostname === 'paris.mofa.ai'
 
 export const API_BASE = isLocalBackend ? '' : 'https://paris.mofa.ai'
+const BASE_URL = import.meta.env.BASE_URL // '/' or '/paris2026/'
 
-// Prefix dynamic image URLs with API_BASE when on external hosts
+// Resolve image paths: uploads go to backend, static assets use base path
 export function assetUrl(path: string): string {
   if (!path) return ''
   if (path.startsWith('http')) return path
-  if (!API_BASE) return path
-  if (path.startsWith('/')) return `${API_BASE}${path}`
+  if (path.startsWith('/uploads/')) return `${API_BASE}${path}`
+  // Static assets (sponsors, icons, default-avatar) — use vite base path
+  if (path.startsWith('/')) return `${BASE_URL}${path.slice(1)}`
   return path
 }

@@ -370,7 +370,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
           <!-- Header -->
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3 min-w-0">
-              <img :src="assetUrl(team.avatar) || '/default-avatar.svg'" class="w-11 h-11 rounded-full shrink-0 object-cover border border-border" />
+              <img :src="assetUrl(team.avatar) || assetUrl('/default-avatar.svg')" class="w-11 h-11 rounded-full shrink-0 object-cover border border-border" />
               <div class="min-w-0">
                 <h3 class="font-bold text-text-primary text-base truncate group-hover:text-accent transition-colors">{{ team.name }}</h3>
                 <div class="flex items-center gap-2 mt-0.5">
@@ -387,7 +387,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
           <!-- Member slots grid -->
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
             <div v-for="member in getTeamMembers(team.id)" :key="member.id" class="flex items-center gap-2 px-3 py-2 bg-bg-elevated/60 border border-border-subtle">
-              <img :src="assetUrl(member.avatar) || '/default-avatar.svg'" class="w-6 h-6 rounded-full shrink-0 object-cover" />
+              <img :src="assetUrl(member.avatar) || assetUrl('/default-avatar.svg')" class="w-6 h-6 rounded-full shrink-0 object-cover" />
               <div class="min-w-0">
                 <span v-if="member.id === team.leaderId" class="text-[9px] text-amber-600 block leading-tight">Lead</span>
                 <span class="text-xs text-text-secondary truncate block">{{ member.name }}</span>
@@ -649,7 +649,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
             <!-- VIEW MODE -->
             <template v-else-if="modalMode === 'view' && viewingTeam">
               <div class="flex items-center gap-4 mb-6">
-                <img :src="assetUrl(viewingTeam.avatar) || '/default-avatar.svg'" class="w-16 h-16 rounded-[10px] object-cover border border-border" />
+                <img :src="assetUrl(viewingTeam.avatar) || assetUrl('/default-avatar.svg')" class="w-16 h-16 rounded-[10px] object-cover border border-border" />
                 <div>
                   <h3 class="text-2xl font-bold text-text-primary">{{ viewingTeam.name }}</h3>
                   <div class="flex items-center gap-2 mt-1">
@@ -689,7 +689,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                 <p class="text-xs text-text-muted uppercase tracking-wider mb-3 font-semibold">{{ t('teams.membersLabel') }}</p>
                 <div class="space-y-3">
                   <div v-for="member in getTeamMembers(viewingTeam.id)" :key="member.id" class="flex items-center gap-3 p-3 bg-bg-elevated">
-                    <img :src="assetUrl(member.avatar) || '/default-avatar.svg'" class="w-8 h-8 rounded-full shrink-0 object-cover border border-border" />
+                    <img :src="assetUrl(member.avatar) || assetUrl('/default-avatar.svg')" class="w-8 h-8 rounded-full shrink-0 object-cover border border-border" />
                     <div class="flex-1 min-w-0">
                       <span class="text-sm font-semibold text-text-primary">{{ member.name }}</span>
                       <span v-if="member.id === viewingTeam.leaderId" class="text-[10px] text-amber-600 ml-1">{{ t('teams.lead') }}</span>
