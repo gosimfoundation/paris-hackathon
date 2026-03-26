@@ -11,7 +11,7 @@ const { user, isLoggedIn, promptAuth } = useAuth()
 const {
   teams, users, totalMembers, totalRegistered, spotsLeft, isFull, progress,
   modelStats, loading, error, lastUpdated,
-  fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam
+  fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam, approveJoin, rejectJoin
 } = useTeams()
 
 // Like tracking (localStorage)
@@ -212,11 +212,30 @@ async function handleJoinTeam(teamId: string, e?: Event) {
   const team = teams.value.find(t => t.id === teamId)
   const ok = await joinTeam(teamId)
   if (ok) {
-    showToast(`You've joined "${team?.name || 'the team'}"! See you in Paris!`)
-    // Refresh viewingTeam if in view modal
+    showToast(`Request sent to "${team?.name || 'the team'}". Waiting for leader approval.`)
     if (viewingTeam.value?.id === teamId) {
       viewingTeam.value = teams.value.find(t => t.id === teamId) || null
     }
+  }
+}
+
+function hasPendingRequest(team: Team) {
+  return user.value && (team.pendingJoins || []).includes(user.value.id)
+}
+
+async function handleApprove(teamId: string, userId: string) {
+  const ok = await approveJoin(teamId, userId)
+  if (ok) {
+    showToast('Member approved!')
+    viewingTeam.value = teams.value.find(t => t.id === teamId) || null
+  }
+}
+
+async function handleReject(teamId: string, userId: string) {
+  const ok = await rejectJoin(teamId, userId)
+  if (ok) {
+    showToast('Request declined.')
+    viewingTeam.value = teams.value.find(t => t.id === teamId) || null
   }
 }
 
@@ -719,13 +738,20 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
 
                 <!-- Join: logged in, team open, user has no team -->
                 <button
-                  v-if="isLoggedIn && canJoin(viewingTeam) && !userHasTeam()"
+                  v-if="isLoggedIn && canJoin(viewingTeam) && !userHasTeam() && !hasPendingRequest(viewingTeam)"
                   @click="handleJoinTeam(viewingTeam.id)"
                   :disabled="loading"
                   class="flex-[2] py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50"
                 >
-                  {{ loading ? 'Joining...' : t('teams.joinBtn') }}
+                  {{ loading ? 'Sending...' : 'Request to Join' }}
                 </button>
+                <!-- Already requested -->
+                <span
+                  v-else-if="isLoggedIn && hasPendingRequest(viewingTeam)"
+                  class="flex-[2] py-3 text-center text-sm text-amber-600 border border-amber-600/30"
+                >
+                  Pending Approval
+                </span>
 
                 <!-- Not logged in: register to join -->
                 <button v-else-if="!isLoggedIn && canJoin(viewingTeam)" @click="showModal = false; promptAuth('register')" class="flex-[2] py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors">
@@ -747,6 +773,24 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                 >
                   {{ loading ? 'Leaving...' : 'Leave Team' }}
                 </button>
+              </div>
+
+              <!-- Pending join requests (leader only) -->
+              <div v-if="isLoggedIn && isTeamLeader(viewingTeam) && viewingTeam.pendingUsers?.length" class="mt-4 p-4 border border-amber-600/30 bg-badge-warning-bg/30">
+                <p class="text-xs text-amber-600 uppercase tracking-wider mb-3 font-semibold">Pending Requests ({{ viewingTeam.pendingUsers.length }})</p>
+                <div class="space-y-2">
+                  <div v-for="pu in viewingTeam.pendingUsers" :key="pu.id" class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <img :src="assetUrl(pu.avatar) || assetUrl('/default-avatar.svg')" class="w-6 h-6 rounded-full shrink-0 object-cover" />
+                      <span class="text-sm text-text-primary truncate">{{ pu.name }}</span>
+                      <span v-if="pu.role" class="text-[10px] text-text-muted truncate">{{ pu.role }}</span>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                      <button @click="handleApprove(viewingTeam.id, pu.id)" class="px-3 py-1 text-xs bg-badge-success-bg text-badge-success-text font-semibold hover:opacity-80 transition-opacity">Approve</button>
+                      <button @click="handleReject(viewingTeam.id, pu.id)" class="px-3 py-1 text-xs bg-badge-danger-bg text-badge-danger-text font-semibold hover:opacity-80 transition-opacity">Decline</button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Leader actions: edit + delete -->

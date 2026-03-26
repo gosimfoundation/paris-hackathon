@@ -15,6 +15,8 @@ export interface Team {
   maxSize: number
   likes: number
   members: User[]
+  pendingJoins?: string[]
+  pendingUsers?: User[]
   createdAt: string
 }
 
@@ -199,6 +201,52 @@ export function useTeams() {
     }
   }
 
+  async function approveJoin(teamId: string, userId: string) {
+    loading.value = true
+    error.value = ''
+    try {
+      const res = await fetch(`${API_URL}/${teamId}/approve/${userId}`, {
+        method: 'POST',
+        headers: authHeaders(),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        error.value = data.error || 'Failed to approve'
+        return false
+      }
+      await fetchTeams()
+      return true
+    } catch {
+      error.value = 'Network error'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function rejectJoin(teamId: string, userId: string) {
+    loading.value = true
+    error.value = ''
+    try {
+      const res = await fetch(`${API_URL}/${teamId}/reject/${userId}`, {
+        method: 'POST',
+        headers: authHeaders(),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        error.value = data.error || 'Failed to reject'
+        return false
+      }
+      await fetchTeams()
+      return true
+    } catch {
+      error.value = 'Network error'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function likeTeam(teamId: string) {
     try {
       const res = await fetch(`${API_URL}/${teamId}/like`, { method: 'POST' })
@@ -222,6 +270,6 @@ export function useTeams() {
   return {
     teams, users, totalMembers, totalRegistered, maxParticipants, spotsLeft, isFull, progress,
     modelStats, loading, error, lastUpdated,
-    fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam,
+    fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam, approveJoin, rejectJoin,
   }
 }
