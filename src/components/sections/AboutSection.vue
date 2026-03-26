@@ -1,28 +1,22 @@
 <script setup lang="ts">
 import { useI18n } from '../../composables/useI18n'
-import { ref, onMounted } from 'vue'
 
 const { t } = useI18n()
 
-const isSafari = ref(false)
 
-onMounted(() => {
-  const ua = navigator.userAgent
-  isSafari.value = /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua)
-})
+
 </script>
 
 <template>
   <section id="about" class="relative py-32 bg-bg-primary overflow-hidden">
     <!-- Background video / Safari fallback -->
     <div class="absolute inset-0 hidden md:block pointer-events-none">
-      <img v-if="isSafari" src="/photos/hero-video-poster.jpg" class="w-full h-full object-cover opacity-15" />
-      <video v-else
-        src="/photos/hero-video-4k.mp4"
+      <video
         autoplay loop muted playsinline
         preload="auto"
+        poster="/photos/hero-video-poster.jpg"
         class="w-full h-full object-cover opacity-15"
-      ></video>
+      ><source src="/photos/hero-video-4k.mp4" type="video/mp4" /></video>
       <!-- Fade overlays -->
       <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-bg-primary to-transparent"></div>
       <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-bg-primary to-transparent"></div>
@@ -60,12 +54,11 @@ onMounted(() => {
 
         <!-- Art video -->
         <div class="hidden md:block shrink-0 reveal reveal-delay-2">
-          <img v-if="isSafari" src="/photos/art-loop-poster.jpg" class="w-48 lg:w-56 rounded-2xl shadow-lg" />
-          <video v-else
-            src="/photos/art-loop.mp4"
+          <video
             autoplay loop muted playsinline preload="auto"
+            poster="/photos/art-loop-poster.jpg"
             class="w-48 lg:w-56 rounded-2xl shadow-lg"
-          ></video>
+          ><source src="/photos/art-loop.mp4" type="video/mp4" /></video>
         </div>
         </div>
       </div>
