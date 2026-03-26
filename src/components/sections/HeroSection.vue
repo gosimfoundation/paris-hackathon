@@ -54,10 +54,10 @@ const timeUnits = [
         <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-text-tertiary mt-4">Agentic Hackathon</div>
       </div>
 
-      <!-- Tagline -->
-      <p class="text-lg md:text-xl text-text-tertiary font-light tracking-wide mt-4 mb-2 heading-serif" style="font-style: italic;">
+      <!-- Tagline (hidden for now) -->
+      <!-- <p class="text-lg md:text-xl text-text-tertiary font-light tracking-wide mt-4 mb-2 heading-serif" style="font-style: italic;">
         {{ t('hero.tagline') }}
-      </p>
+      </p> -->
 
       <!-- Divider line -->
       <div class="flex items-center justify-center gap-6 my-10">
