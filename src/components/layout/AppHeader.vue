@@ -225,6 +225,12 @@ async function saveProfile() {
         >
           {{ item.label }}
         </a>
+        <router-link
+          to="/vision"
+          class="text-sm text-text-tertiary hover:text-text-primary transition-colors cursor-pointer relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-accent after:transition-all hover:after:w-full"
+        >
+          Vision
+        </router-link>
 
         <!-- Theme toggle -->
         <button
@@ -305,6 +311,13 @@ async function saveProfile() {
         >
           {{ item.label }}
         </a>
+        <router-link
+          to="/vision"
+          @click="mobileOpen = false"
+          class="block py-3 text-text-tertiary hover:text-text-primary transition-colors"
+        >
+          Vision
+        </router-link>
         <button
           @click="toggleLocale"
           class="block py-3 text-text-tertiary hover:text-text-primary transition-colors font-mono text-sm"
