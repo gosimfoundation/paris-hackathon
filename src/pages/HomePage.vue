@@ -38,7 +38,7 @@ function copyUrlForChrome() {
   <!-- Safari banner -->
   <Transition enter-active-class="transition-all duration-300" enter-from-class="opacity-0 -translate-y-full" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition-all duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-full">
     <div v-if="showSafariBanner" class="fixed top-0 left-0 right-0 z-[200] bg-amber-50 border-b border-amber-200 px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-amber-800">
-      <span>Some animations may not display correctly in Safari. For the full experience, please open in <strong>Chrome</strong> or <strong>Firefox</strong>.</span>
+      <span>For the best visual experience, we recommend <strong>Chrome</strong> or <strong>Firefox</strong>.</span>
       <div class="flex gap-2">
         <button @click="copyUrlForChrome" class="px-3 py-1 rounded bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors">
           {{ copied ? 'Copied!' : 'Copy URL' }}

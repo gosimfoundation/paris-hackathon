@@ -30,8 +30,9 @@ const timeUnits = [
     <!-- Background video -->
     <div class="absolute inset-0">
       <video
-        autoplay loop muted playsinline
+        autoplay loop muted playsinline webkit-playsinline
         poster="/photos/hero-bg-poster.jpg"
+        preload="auto"
         class="w-full h-full object-cover opacity-25"
       ><source src="/photos/hero-bg.mp4" type="video/mp4" /></video>
     </div>

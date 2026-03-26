@@ -9,10 +9,10 @@ const { t } = useI18n()
 
 <template>
   <section id="about" class="relative py-32 bg-bg-primary overflow-hidden">
-    <!-- Background video / Safari fallback -->
+    <!-- Background video -->
     <div class="absolute inset-0 hidden md:block pointer-events-none">
       <video
-        autoplay loop muted playsinline
+        autoplay loop muted playsinline webkit-playsinline
         preload="auto"
         poster="/photos/hero-video-poster.jpg"
         class="w-full h-full object-cover opacity-15"
@@ -55,7 +55,7 @@ const { t } = useI18n()
         <!-- Art video -->
         <div class="hidden md:block shrink-0 reveal reveal-delay-2">
           <video
-            autoplay loop muted playsinline preload="auto"
+            autoplay loop muted playsinline webkit-playsinline preload="auto"
             poster="/photos/art-loop-poster.jpg"
             class="w-48 lg:w-56 rounded-2xl shadow-lg"
           ><source src="/photos/art-loop.mp4" type="video/mp4" /></video>
