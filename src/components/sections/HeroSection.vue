@@ -50,7 +50,7 @@ const timeUnits = [
 
       <!-- Main title -->
       <div class="mb-6">
-        <div class="shimmer-text text-6xl md:text-8xl lg:text-[10rem] pb-4" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; line-height: 1.1;">Upstream</div>
+        <div class="shimmer-text text-6xl md:text-8xl lg:text-[10rem] pb-4" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; line-height: 1.1;">GOSIM</div>
         <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-text-tertiary mt-4">Agentic Hackathon</div>
       </div>
 
