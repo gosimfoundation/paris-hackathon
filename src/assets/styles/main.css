@@ -362,57 +362,56 @@ body {
   align-items: center;
 }
 
+/* Ribbon: two thin angled straps meeting at top */
 .medal-ribbon {
-  width: 2px;
-  height: 20px;
-  background: linear-gradient(to bottom, var(--medal-color), transparent);
-  margin-bottom: -2px;
+  width: 0;
+  height: 0;
   position: relative;
+  margin-bottom: -6px;
+  z-index: 0;
 }
 
 .medal-ribbon::before,
 .medal-ribbon::after {
   content: '';
   position: absolute;
-  top: 0;
-  width: 14px;
-  height: 22px;
-  border-radius: 0 0 4px 4px;
+  bottom: 0;
+  width: 8px;
+  height: 28px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(to bottom, var(--medal-color), color-mix(in srgb, var(--medal-color) 60%, transparent));
 }
 
 .medal-ribbon::before {
-  right: 2px;
-  background: var(--medal-color);
-  opacity: 0.5;
-  transform: rotate(-15deg);
-  transform-origin: top center;
+  right: 1px;
+  transform: rotate(-20deg);
+  transform-origin: bottom center;
+  opacity: 0.6;
 }
 
 .medal-ribbon::after {
-  left: 2px;
-  background: var(--medal-color);
-  opacity: 0.5;
-  transform: rotate(15deg);
-  transform-origin: top center;
+  left: 1px;
+  transform: rotate(20deg);
+  transform-origin: bottom center;
+  opacity: 0.4;
 }
 
 .medal-circle {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--medal-color) 25%, #1c1f2b), #1c1f2b);
-  border: 3px solid var(--medal-color);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--medal-color) 20%, #1c1f2b), #1c1f2b);
+  border: 2px solid var(--medal-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px color-mix(in srgb, var(--medal-color) 30%, transparent),
-              inset 0 0 12px color-mix(in srgb, var(--medal-color) 10%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--medal-color) 25%, transparent);
   position: relative;
   z-index: 1;
 }
 
 .light .medal-circle {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--medal-color) 15%, #fff), #fff);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--medal-color) 12%, #fff), #fff);
 }
 
 /* === Mouse follow glow on cards === */
