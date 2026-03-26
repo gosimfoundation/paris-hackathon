@@ -1,4 +1,5 @@
 import { ref, provide, inject, type InjectionKey, type Ref, onMounted } from 'vue'
+import { API_BASE } from './api'
 
 export interface User {
   id: string
@@ -64,7 +65,7 @@ export function provideAuth() {
   async function fetchMe() {
     if (!token.value) return
     try {
-      const res = await fetch('/api/me', { headers: authHeaders() })
+      const res = await fetch(`${API_BASE}/api/me`, { headers: authHeaders() })
       if (res.ok) {
         const data = await res.json()
         user.value = data.user
@@ -80,7 +81,7 @@ export function provideAuth() {
   async function register(data: RegisterData): Promise<boolean> {
     error.value = ''
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch(`${API_BASE}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -104,7 +105,7 @@ export function provideAuth() {
   async function login(email: string, password: string): Promise<boolean> {
     error.value = ''
     try {
-      const res = await fetch('/api/login', {
+      const res = await fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -136,7 +137,7 @@ export function provideAuth() {
     if (!user.value || !token.value) return false
     error.value = ''
     try {
-      const res = await fetch(`/api/users/${user.value.id}`, {
+      const res = await fetch(`${API_BASE}/api/users/${user.value.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(data),

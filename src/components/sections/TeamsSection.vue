@@ -115,7 +115,7 @@ function defaultAvatar(): string {
   return '/default-avatar.svg'
 }
 
-const API_BASE = ''
+import { API_BASE } from '../../composables/api'
 
 async function uploadTeamAvatar(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]

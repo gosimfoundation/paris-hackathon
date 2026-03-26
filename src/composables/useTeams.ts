@@ -1,5 +1,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { User } from './useAuth'
+import { API_BASE } from './api'
 
 export interface Team {
   id: string
@@ -17,7 +18,7 @@ export interface Team {
   createdAt: string
 }
 
-const API_URL = '/api/teams'
+const API_URL = `${API_BASE}/api/teams`
 
 const teams = ref<Team[]>([])
 const users = ref<User[]>([])
@@ -56,7 +57,7 @@ export function useTeams() {
     try {
       const [teamsRes, usersRes] = await Promise.all([
         fetch(API_URL),
-        fetch('/api/users'),
+        fetch(`${API_BASE}/api/users`),
       ])
       if (teamsRes.ok) {
         const data = await teamsRes.json()
