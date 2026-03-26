@@ -4,12 +4,14 @@ import { assetUrl } from '../../composables/api'
 
 const { t } = useI18n()
 
+const upstreamLogo = 'https://avatars.githubusercontent.com/u/238420183?s=200&v=4'
+
 const awards = [
   { key: 'zhipu', color: '#3b82f6', img: assetUrl('/sponsors/zhipu-v2.png') },
   { key: 'minimax', color: '#f43f5e', img: assetUrl('/sponsors/minimax.png') },
   { key: 'moonshot', color: '#a855f7', img: assetUrl('/sponsors/kimi.png') },
-  { key: 'upstream1', color: '#4CAF50', letter: 'U' },
-  { key: 'upstream2', color: '#3BA7D0', letter: 'U' },
+  { key: 'upstream1', color: '#4CAF50', img: upstreamLogo },
+  { key: 'upstream2', color: '#3BA7D0', img: upstreamLogo },
 ]
 </script>
 
@@ -26,16 +28,26 @@ const awards = [
 
       <!-- Sponsor awards: top row -->
       <div class="grid md:grid-cols-3 gap-10 max-w-4xl mx-auto mb-12 reveal reveal-delay-1">
-        <div v-for="award in awards.slice(0, 3)" :key="award.key" class="relative pl-6 border-l-2 border-transparent" :style="{ borderImage: `linear-gradient(to bottom, ${award.color}, transparent) 1` }">
-          <img :src="award.img" class="w-10 h-10 rounded-[10px] mb-3 object-contain" />
+        <div v-for="award in awards.slice(0, 3)" :key="award.key" class="flex flex-col items-center text-center">
+          <div class="medal mb-4" :style="{ '--medal-color': award.color }">
+            <div class="medal-ribbon"></div>
+            <div class="medal-circle">
+              <img :src="award.img" class="w-9 h-9 rounded-full object-cover" />
+            </div>
+          </div>
           <h3 class="heading-serif text-xl text-text-primary mb-1">{{ t(`awards.${award.key}`) }}</h3>
           <p class="text-text-secondary text-sm">{{ t(`awards.${award.key}By`) }}</p>
         </div>
       </div>
       <!-- Upstream awards: bottom row -->
-      <div class="grid md:grid-cols-2 gap-10 max-w-2xl mx-auto reveal reveal-delay-2">
-        <div v-for="award in awards.slice(3)" :key="award.key" class="relative pl-6 border-l-2 border-transparent" :style="{ borderImage: `linear-gradient(to bottom, ${award.color}, transparent) 1` }">
-          <span class="heading-serif text-2xl font-bold mb-3 block" :style="{ color: award.color }">{{ award.letter }}</span>
+      <div class="grid md:grid-cols-2 gap-10 max-w-xl mx-auto reveal reveal-delay-2">
+        <div v-for="award in awards.slice(3)" :key="award.key" class="flex flex-col items-center text-center">
+          <div class="medal mb-4" :style="{ '--medal-color': award.color }">
+            <div class="medal-ribbon"></div>
+            <div class="medal-circle">
+              <img :src="award.img" class="w-9 h-9 rounded-full object-cover" />
+            </div>
+          </div>
           <h3 class="heading-serif text-xl text-text-primary mb-1">{{ t(`awards.${award.key}`) }}</h3>
           <p class="text-text-secondary text-sm">{{ t(`awards.${award.key}By`) }}</p>
         </div>
