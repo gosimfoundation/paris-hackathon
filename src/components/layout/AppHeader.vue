@@ -221,13 +221,13 @@ async function saveProfile() {
           v-for="item in navItems"
           :key="item.href"
           @click.prevent="scrollTo(item.href)"
-          class="text-xs text-text-tertiary hover:text-text-primary transition-colors cursor-pointer relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-accent after:transition-all hover:after:w-full"
+          class="text-xs text-text-secondary hover:text-text-primary transition-colors cursor-pointer relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-accent after:transition-all hover:after:w-full"
         >
           {{ item.label }}
         </a>
         <router-link
           to="/vision"
-          class="text-xs text-text-tertiary hover:text-text-primary transition-colors cursor-pointer relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-accent after:transition-all hover:after:w-full"
+          class="text-xs text-text-secondary hover:text-text-primary transition-colors cursor-pointer relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-accent after:transition-all hover:after:w-full"
         >
           Vision
         </router-link>
