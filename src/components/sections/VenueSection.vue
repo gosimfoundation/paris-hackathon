@@ -63,7 +63,6 @@ const { t } = useI18n()
           <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-bg-primary to-transparent z-10"></div>
           <div class="flex gap-4 animate-marquee" style="animation-duration: 65s;">
             <template v-for="n in 2" :key="n">
-              <img src="/photos/gosim-event-1.jpg" alt="GOSIM" class="w-72 h-44 object-cover rounded-lg shrink-0" />
               <img src="/photos/gosim-event-4.jpg" alt="GOSIM" class="w-64 h-44 object-cover rounded-lg shrink-0" />
               <img src="/photos/gosim-event-2.jpg" alt="GOSIM" class="w-72 h-44 object-cover rounded-lg shrink-0" />
               <img src="/photos/gosim-event-3.jpg" alt="GOSIM" class="w-80 h-44 object-cover rounded-lg shrink-0" />

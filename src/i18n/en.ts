@@ -12,6 +12,7 @@ export default {
   hero: {
     eyebrow: 'Explore Agentic AI',
     tagline: 'Go Upstream',
+    organizer: 'Organized by Upstream Labs',
     location: 'May 5–6, 2026 · STATION F · Paris',
     days: 'Days',
     hours: 'Hours',
@@ -24,7 +25,7 @@ export default {
     title: 'GOSIM Agentic Hackathon',
     partOf: 'As part of',
     partOfEvent: 'GOSIM Paris 2026',
-    partOfSuffix: ', at STATION F, Upstream invites builders worldwide to explore the frontier of agentic AI — not just using it, but understanding it. Not just following trends, but shaping them.',
+    partOfSuffix: ', at STATION F, we invite builders worldwide to explore the frontier of agentic AI — not just using it, but understanding it. Not just following trends, but shaping them.',
     p1: 'The river surges forward. Will you go upstream?',
     p2: 'On May 5–6 at STATION F, the GOSIM Agentic Hackathon brings builders together to demystify AI, champion open source, and explore the foundations of the agentic era.',
     mission1_title: 'Demystify AI',

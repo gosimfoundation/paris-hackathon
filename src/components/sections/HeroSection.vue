@@ -52,6 +52,7 @@ const timeUnits = [
       <div class="mb-6">
         <div class="shimmer-text text-6xl md:text-8xl lg:text-[10rem] pb-4" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; line-height: 1.1;">GOSIM</div>
         <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-text-primary mt-4">Agentic Hackathon</div>
+        <p class="text-sm md:text-base text-text-primary/60 font-light tracking-[0.15em] uppercase mt-4">{{ t('hero.organizer') }}</p>
       </div>
 
       <!-- Tagline (hidden for now) -->
