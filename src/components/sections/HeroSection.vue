@@ -15,27 +15,21 @@ const timeUnits = [
 
 <template>
   <section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-bg-primary">
-    <!-- Animated gradient background -->
-    <div
-      class="absolute inset-0 opacity-8 animate-gradient-shift"
-      style="background: linear-gradient(-45deg, #4CAF50, #C8D84C, #E8D44D, #7CC9A0, #3BA7D0); background-size: 400% 400%;"
-    ></div>
-
-    <!-- Grid pattern overlay -->
-    <div
-      class="absolute inset-0 opacity-[0.03]"
-      style="background-image: linear-gradient(rgba(0,0,0,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.3) 1px, transparent 1px); background-size: 60px 60px;"
-    ></div>
-
     <!-- Background video -->
     <div class="absolute inset-0">
       <video
         autoplay loop muted playsinline webkit-playsinline
-        poster="/photos/hero-bg-poster.jpg"
         preload="auto"
-        class="w-full h-full object-cover opacity-25"
+        poster="/photos/hero-bg-poster.jpg"
+        class="w-full h-full object-cover opacity-30"
       ><source src="/photos/hero-bg.mp4" type="video/mp4" /></video>
     </div>
+
+    <!-- Red-blue gradient overlay -->
+    <div
+      class="absolute inset-0 opacity-20 animate-gradient-shift"
+      style="background: linear-gradient(-45deg, #dc2626, #991b1b, #1e3a8a, #2563eb, #dc2626); background-size: 400% 400%;"
+    ></div>
 
 
     <!-- Content -->
@@ -53,6 +47,31 @@ const timeUnits = [
         <div class="shimmer-text text-6xl md:text-8xl lg:text-[10rem] pb-4" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; line-height: 1.1;">GOSIM</div>
         <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-text-primary mt-4">Agentic Hackathon</div>
         <p class="text-sm md:text-base text-text-primary/60 font-light tracking-[0.15em] uppercase mt-4">{{ t('hero.organizer') }}</p>
+      </div>
+
+      <!-- Sponsor line -->
+      <div class="mb-6">
+        <p class="text-sm md:text-lg text-text-primary/80 font-light tracking-wide">
+          Sponsored by Your Favorite Tokens from
+          <span class="font-semibold text-text-primary">GLM</span>,
+          <span class="font-semibold text-text-primary">Kimi</span>,
+          <span class="font-semibold text-text-primary">MiniMax</span>,
+          <span class="font-semibold text-text-primary">MiniCPM</span>
+        </p>
+        <div class="grid grid-cols-4 gap-4 md:gap-6 mt-6 max-w-3xl mx-auto">
+          <div class="flex items-center justify-center h-14 md:h-16">
+            <img src="/sponsors/minicpm.svg" alt="MiniCPM" class="max-h-10 w-auto max-w-[140px] object-contain brightness-0 invert opacity-90" />
+          </div>
+          <div class="flex items-center justify-center h-14 md:h-16">
+            <img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="max-h-10 w-auto max-w-[140px] object-contain brightness-0 invert opacity-90" />
+          </div>
+          <div class="flex items-center justify-center h-14 md:h-16">
+            <img src="/sponsors/kimi-wide.webp" alt="Moonshot AI (Kimi)" class="max-h-10 w-auto max-w-[140px] object-contain brightness-0 invert opacity-90" />
+          </div>
+          <div class="flex items-center justify-center h-14 md:h-16">
+            <img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="max-h-10 w-auto max-w-[140px] object-contain brightness-0 invert opacity-90" />
+          </div>
+        </div>
       </div>
 
       <!-- Tagline (hidden for now) -->
