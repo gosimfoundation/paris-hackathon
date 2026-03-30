@@ -38,8 +38,24 @@ function getTeamMembers(teamId: string): User[] {
   return users.value.filter(u => u.teamId === teamId)
 }
 
-// Hover detail
+// Hover detail + 3D tilt
 const hoveredTeam = ref<string | null>(null)
+
+// 3D Tilt effect
+function onCardMouseMove(e: MouseEvent, cardEl: HTMLElement) {
+  const rect = cardEl.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const y = e.clientY - rect.top
+  const centerX = rect.width / 2
+  const centerY = rect.height / 2
+  const rotateX = (y - centerY) / 20
+  const rotateY = (centerX - x) / 20
+  cardEl.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`
+}
+
+function onCardMouseLeave(cardEl: HTMLElement) {
+  cardEl.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)'
+}
 
 const toast = ref<{ msg: string; type: 'success' | 'error' } | null>(null)
 let toastTimer: number | undefined
@@ -404,8 +420,10 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
           :key="team.id"
           @click="openViewModal(team)"
           @mouseenter="hoveredTeam = team.id"
-          @mouseleave="hoveredTeam = null"
+          @mouseleave="hoveredTeam = null; onCardMouseLeave($event.currentTarget as HTMLElement)"
+          @mousemove="onCardMouseMove($event, $event.currentTarget as HTMLElement)"
           class="team-card glass-card-glow p-6 transition-all group relative cursor-pointer flex flex-col"
+          style="transition: transform 0.15s ease-out;"
         >
           <!-- Header -->
           <div class="flex items-center justify-between mb-4">

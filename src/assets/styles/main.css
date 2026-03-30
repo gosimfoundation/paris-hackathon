@@ -515,7 +515,7 @@ body {
 .team-card {
   background: rgba(28, 31, 43, 0.6);
   border: 1px solid rgba(55, 60, 80, 0.5);
-  transition: border-color 0.4s, box-shadow 0.4s, background 0.4s;
+  transition: border-color 0.4s, box-shadow 0.4s, background 0.4s, transform 0.3s ease-out;
 }
 .light .team-card {
   background: rgba(255, 255, 255, 0.7);
@@ -524,12 +524,14 @@ body {
 .team-card:hover {
   background: rgba(28, 31, 43, 0.75);
   border-color: rgba(220, 90, 60, 0.5);
-  box-shadow: 0 0 30px rgba(220, 90, 60, 0.1), 0 0 60px rgba(220, 90, 60, 0.05);
+  box-shadow: 0 8px 40px rgba(220, 90, 60, 0.15), 0 0 80px rgba(220, 90, 60, 0.08), 0 20px 60px rgba(0, 0, 0, 0.3);
+  transform: translateY(-4px);
 }
 .light .team-card:hover {
   background: rgba(255, 255, 255, 0.85);
   border-color: rgba(220, 90, 60, 0.35);
-  box-shadow: 0 0 20px rgba(220, 90, 60, 0.08);
+  box-shadow: 0 8px 30px rgba(220, 90, 60, 0.12), 0 0 50px rgba(220, 90, 60, 0.06), 0 15px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
 }
 
 /* Countdown flip animation */
@@ -551,4 +553,27 @@ body {
 @keyframes countdown-glow {
   0%, 100% { box-shadow: 0 0 0 rgba(37, 99, 235, 0); }
   50% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.15), 0 0 40px rgba(220, 38, 38, 0.08); }
+}
+
+/* Input focus glow */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3), 0 0 20px rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.5);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.light input:focus, .light textarea:focus, .light select:focus {
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2), 0 0 15px rgba(37, 99, 235, 0.1);
+}
+
+/* Scroll indicator fade out on scroll */
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite;
+  transition: opacity 0.5s ease;
+}
+
+.scrolled .animate-bounce-slow {
+  opacity: 0;
+  pointer-events: none;
 }
