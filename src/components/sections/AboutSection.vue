@@ -9,8 +9,8 @@ const { t } = useI18n()
 
 <template>
   <section id="about" class="relative py-32 bg-bg-primary overflow-hidden">
-    <!-- Background video -->
-    <div class="absolute inset-0 hidden md:block pointer-events-none">
+    <!-- Background video (parallax) -->
+    <div class="absolute inset-0 hidden md:block pointer-events-none parallax-bg">
       <video
         autoplay loop muted playsinline webkit-playsinline
         preload="auto"
@@ -26,7 +26,7 @@ const { t } = useI18n()
 
     <div class="relative max-w-4xl mx-auto px-6">
       <!-- Quote -->
-      <div class="text-center mb-16 reveal">
+      <div class="text-center mb-16 reveal-blur">
         <blockquote class="heading-serif text-xl md:text-2xl text-text-tertiary leading-relaxed">
           {{ t('about.quote') }}
         </blockquote>
@@ -53,7 +53,7 @@ const { t } = useI18n()
         </div>
 
         <!-- Art video -->
-        <div class="hidden md:block shrink-0 reveal reveal-delay-2">
+        <div class="hidden md:block shrink-0 reveal-right reveal-delay-2">
           <video
             autoplay loop muted playsinline webkit-playsinline preload="auto"
             poster="/photos/art-loop-poster.jpg"

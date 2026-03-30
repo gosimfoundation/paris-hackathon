@@ -8,13 +8,13 @@ const { t } = useI18n()
   <section class="relative py-24 bg-bg-primary overflow-hidden">
     <!-- Background: STATION F faded -->
     <div
-      class="absolute inset-0 bg-cover bg-center opacity-10"
+      class="absolute inset-0 bg-cover bg-center opacity-10 parallax-bg"
       style="background-image: url('/photos/gosim-stationf.jpg');"
     ></div>
     <div class="relative max-w-7xl mx-auto px-6">
       <div class="grid md:grid-cols-2 gap-16 items-center">
         <!-- Left: text -->
-        <div class="reveal">
+        <div class="reveal-left">
           <span class="text-xs text-text-secondary uppercase tracking-[0.2em]">{{ t('venue.label') }}</span>
           <h2 class="text-4xl md:text-5xl font-black mt-4 mb-6">
             {{ t('venue.title') }}<br /><span class="heading-serif font-medium text-text-tertiary">{{ t('venue.subtitle') }}</span>

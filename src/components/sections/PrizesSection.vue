@@ -28,7 +28,7 @@ const awards = [
       <p class="text-center text-text-secondary mb-16 reveal">{{ t('awards.subtitle') }}</p>
 
       <!-- Sponsor awards: top row -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-10 max-w-5xl mx-auto mb-12 reveal reveal-delay-1">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-10 max-w-5xl mx-auto mb-12 reveal-scale reveal-delay-1">
         <div v-for="award in awards.slice(0, 4)" :key="award.key" class="flex flex-col items-center text-center">
           <div class="medal mb-4" :style="{ '--medal-color': award.color }">
             <div class="medal-ribbon"></div>

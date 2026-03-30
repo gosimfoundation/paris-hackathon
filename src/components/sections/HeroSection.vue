@@ -1,9 +1,25 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useCountdown } from '../../composables/useCountdown'
 import { useI18n } from '../../composables/useI18n'
 
 const { t } = useI18n()
 const { days, hours, minutes, seconds, isLive, isOver } = useCountdown('2026-05-05T08:30:00+02:00', '2026-05-06T20:00:00+02:00')
+
+// Typewriter for subtitle
+const subtitle = 'Agentic Hackathon'
+const typedSubtitle = ref('')
+const showCursor = ref(true)
+onMounted(() => {
+  let i = 0
+  const interval = setInterval(() => {
+    typedSubtitle.value = subtitle.slice(0, ++i)
+    if (i >= subtitle.length) {
+      clearInterval(interval)
+      setTimeout(() => showCursor.value = false, 1500)
+    }
+  }, 80)
+})
 
 const timeUnits = [
   { key: 'hero.days', value: days },
@@ -45,7 +61,7 @@ const timeUnits = [
       <!-- Main title -->
       <div class="mb-6">
         <div class="shimmer-text text-6xl md:text-8xl lg:text-[10rem] pb-4" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; line-height: 1.1;">GOSIM</div>
-        <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-text-primary mt-4">Agentic Hackathon</div>
+        <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-text-primary mt-4">{{ typedSubtitle }}<span v-if="showCursor" class="animate-pulse">|</span></div>
         <p class="text-sm md:text-base text-text-primary/60 font-light tracking-[0.15em] uppercase mt-4">{{ t('hero.organizer') }}</p>
       </div>
 
@@ -60,7 +76,7 @@ const timeUnits = [
         </p>
         <div class="grid grid-cols-2 md:flex md:items-center md:justify-center gap-6 md:gap-14 mt-6 max-w-sm md:max-w-none mx-auto">
           <div class="flex items-center justify-center"><img src="/sponsors/minicpm.svg" alt="MiniCPM" class="h-7 md:h-11 w-auto object-contain brightness-0 invert opacity-90" /></div>
-          <div class="flex items-center justify-center"><img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="h-8 md:h-[5.5rem] w-auto object-contain brightness-0 invert opacity-90" /></div>
+          <div class="flex items-center justify-center"><img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="h-7 md:h-[5rem] w-auto object-contain brightness-0 invert opacity-90" /></div>
           <div class="flex items-center justify-center"><img src="/sponsors/kimi-wide.webp" alt="Moonshot AI (Kimi)" class="h-6 md:h-9 w-auto object-contain brightness-0 invert opacity-90" /></div>
           <div class="flex items-center justify-center"><img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="h-6 md:h-9 w-auto object-contain brightness-0 invert opacity-90" /></div>
         </div>
@@ -92,11 +108,13 @@ const timeUnits = [
         <div
           v-for="unit in timeUnits"
           :key="unit.key"
-          class="flex flex-col items-center min-w-[64px] md:min-w-[80px] px-3 py-4 md:px-5 md:py-5 bg-bg-card/60 backdrop-blur-md border border-bg-card/40 shadow-sm countdown-card"
+          class="flex flex-col items-center min-w-[64px] md:min-w-[80px] px-3 py-4 md:px-5 md:py-5 bg-bg-card/60 backdrop-blur-md border border-bg-card/40 shadow-sm countdown-card countdown-pulse"
         >
-          <span class="text-4xl md:text-6xl font-black font-mono text-text-primary tabular-nums inline-block countdown-num" :key="unit.value.value">
-            {{ String(unit.value.value).padStart(2, '0') }}
-          </span>
+          <div class="relative overflow-hidden">
+            <span class="text-4xl md:text-6xl font-black font-mono text-text-primary tabular-nums inline-block countdown-flip" :key="unit.value.value">
+              {{ String(unit.value.value).padStart(2, '0') }}
+            </span>
+          </div>
           <span class="text-[10px] text-text-primary/60 mt-1 uppercase tracking-[0.15em]">{{ t(unit.key) }}</span>
         </div>
       </div>

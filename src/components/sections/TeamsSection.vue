@@ -334,7 +334,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
 
   <section id="teams" class="relative py-32 bg-bg-secondary overflow-hidden">
     <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center mb-12 reveal">
+      <div class="text-center mb-12 reveal-blur">
         <h2 class="text-4xl md:text-5xl heading-serif">
           {{ t('teams.title') }} <span class="heading-serif accent-text">{{ t('teams.titleAccent') }}</span>
         </h2>
@@ -364,8 +364,8 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
             <span class="text-amber-600 font-bold">{{ spotsLeft }}</span> {{ t('teams.spotsLeft') }}
           </span>
         </div>
-        <div class="w-full h-1 bg-bg-elevated overflow-hidden">
-          <div class="h-full bg-accent transition-all duration-1000" :style="{ width: `${progress}%` }"></div>
+        <div class="w-full h-1.5 bg-bg-elevated overflow-hidden rounded-full">
+          <div class="h-full progress-bar-glow transition-all duration-1000 rounded-full relative" :style="{ width: `${progress}%` }"></div>
         </div>
         <div class="flex justify-center gap-6 mt-6">
           <div v-for="(count, model) in modelStats" :key="model" class="flex items-center gap-2">
