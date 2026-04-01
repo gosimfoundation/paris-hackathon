@@ -18,7 +18,7 @@ const { t } = useI18n()
           <img src="/sponsors/minicpm.svg" alt="MiniCPM" class="max-h-12 w-auto max-w-[180px] object-contain" />
         </a>
         <a href="https://z.ai/" target="_blank" class="glass-card glass-card-glow glow-border sponsor-logo-card p-8 flex items-center justify-center transition-all group block h-28">
-          <img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI" class="max-h-10 w-auto max-w-[180px] object-contain" />
+          <img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI" class="max-h-[4.5rem] w-auto max-w-[320px] object-contain" />
         </a>
         <a href="https://www.minimaxi.com" target="_blank" class="glass-card glass-card-glow glow-border sponsor-logo-card p-8 flex items-center justify-center transition-all group block h-28">
           <img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="max-h-10 w-auto max-w-[180px] object-contain" />

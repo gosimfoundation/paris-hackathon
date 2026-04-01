@@ -11,8 +11,7 @@ const awards = [
   { key: 'zhipu', color: '#3b82f6', img: assetUrl('/sponsors/zhipu-v2.png') },
   { key: 'minimax', color: '#f43f5e', img: assetUrl('/sponsors/minimax.png') },
   { key: 'moonshot', color: '#a855f7', img: assetUrl('/sponsors/kimi.png') },
-  { key: 'upstream1', color: '#4CAF50', img: upstreamLogo },
-  { key: 'upstream2', color: '#3BA7D0', img: upstreamLogo },
+  { key: 'upstream', color: '#4CAF50', img: upstreamLogo },
 ]
 </script>
 
@@ -27,22 +26,9 @@ const awards = [
 
       <p class="text-center text-text-secondary mb-16 reveal">{{ t('awards.subtitle') }}</p>
 
-      <!-- Sponsor awards: top row -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-10 max-w-5xl mx-auto mb-12 reveal-scale reveal-delay-1">
-        <div v-for="award in awards.slice(0, 4)" :key="award.key" class="flex flex-col items-center text-center">
-          <div class="medal mb-4" :style="{ '--medal-color': award.color }">
-            <div class="medal-ribbon"></div>
-            <div class="medal-circle">
-              <img :src="award.img" class="w-9 h-9 rounded-full object-cover" />
-            </div>
-          </div>
-          <h3 class="heading-serif text-xl text-text-primary mb-1">{{ t(`awards.${award.key}`) }}</h3>
-          <p class="text-text-secondary text-sm">{{ t(`awards.${award.key}By`) }}</p>
-        </div>
-      </div>
-      <!-- Upstream awards: bottom row -->
-      <div class="grid md:grid-cols-2 gap-10 max-w-xl mx-auto reveal reveal-delay-2">
-        <div v-for="award in awards.slice(4)" :key="award.key" class="flex flex-col items-center text-center">
+      <!-- All awards in one row -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-10 max-w-5xl mx-auto mb-12 reveal-scale reveal-delay-1">
+        <div v-for="award in awards" :key="award.key" class="flex flex-col items-center text-center">
           <div class="medal mb-4" :style="{ '--medal-color': award.color }">
             <div class="medal-ribbon"></div>
             <div class="medal-circle">

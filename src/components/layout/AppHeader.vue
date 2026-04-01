@@ -49,6 +49,11 @@ const regEmail = ref('')
 const regPassword = ref('')
 const regGithubId = ref('')
 const regRole = ref('')
+const regDiscord = ref('')
+const regTwitter = ref('')
+const regTelegram = ref('')
+const regLinkedin = ref('')
+const regWebsite = ref('')
 const regLookingForTeam = ref(false)
 const regWantCreateTeam = ref(false)
 const regTeamName = ref('')
@@ -87,6 +92,11 @@ watch(showAuthModal, (open) => {
     regPassword.value = ''
     regGithubId.value = ''
     regRole.value = ''
+    regDiscord.value = ''
+    regTwitter.value = ''
+    regTelegram.value = ''
+    regLinkedin.value = ''
+    regWebsite.value = ''
     regLookingForTeam.value = false
     regWantCreateTeam.value = false
     regTeamName.value = ''
@@ -113,6 +123,11 @@ async function submitRegister() {
     themes: regWantCreateTeam.value ? regTeamTracks.value : [],
     preferredModel: '',
     bio: '',
+    discord: regDiscord.value,
+    twitter: regTwitter.value,
+    telegram: regTelegram.value,
+    linkedin: regLinkedin.value,
+    website: regWebsite.value,
     lookingForTeam: regLookingForTeam.value,
   })
   if (ok && regWantCreateTeam.value && regTeamName.value.trim()) {
@@ -154,6 +169,11 @@ const profileRole = ref('')
 const profileBio = ref('')
 const profileThemes = ref<string[]>([])
 const profilePreferredModel = ref('')
+const profileDiscord = ref('')
+const profileTwitter = ref('')
+const profileTelegram = ref('')
+const profileLinkedin = ref('')
+const profileWebsite = ref('')
 const profileLookingForTeam = ref(false)
 const profileLoading = ref(false)
 
@@ -178,6 +198,11 @@ function openProfileModal() {
     profileBio.value = user.value.bio || ''
     profileThemes.value = [...(user.value.themes || [])]
     profilePreferredModel.value = user.value.preferredModel || ''
+    profileDiscord.value = user.value.discord || ''
+    profileTwitter.value = user.value.twitter || ''
+    profileTelegram.value = user.value.telegram || ''
+    profileLinkedin.value = user.value.linkedin || ''
+    profileWebsite.value = user.value.website || ''
     profileLookingForTeam.value = user.value.lookingForTeam
   }
   showProfileModal.value = true
@@ -198,6 +223,11 @@ async function saveProfile() {
     bio: profileBio.value,
     themes: profileThemes.value,
     preferredModel: profilePreferredModel.value,
+    discord: profileDiscord.value,
+    twitter: profileTwitter.value,
+    telegram: profileTelegram.value,
+    linkedin: profileLinkedin.value,
+    website: profileWebsite.value,
     lookingForTeam: profileLookingForTeam.value,
   })
   profileLoading.value = false
@@ -421,6 +451,33 @@ async function saveProfile() {
                 <option v-for="r in roleOptions" :key="r" :value="r" class="bg-bg-primary">{{ r }}</option>
               </select>
             </div>
+            <!-- Optional social links -->
+            <details class="group">
+              <summary class="text-sm text-text-secondary cursor-pointer hover:text-text-primary transition-colors select-none">+ Social links <span class="text-xs text-text-tertiary">(optional)</span></summary>
+              <div class="mt-3 space-y-3 pl-3 border-l-2 border-border">
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">Discord</label>
+                  <input v-model="regDiscord" type="text" placeholder="username#1234" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">Twitter / X</label>
+                  <input v-model="regTwitter" type="text" placeholder="@handle" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">Telegram</label>
+                  <input v-model="regTelegram" type="text" placeholder="@username" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">LinkedIn</label>
+                  <input v-model="regLinkedin" type="text" placeholder="linkedin.com/in/yourname" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">Website</label>
+                  <input v-model="regWebsite" type="text" placeholder="https://yoursite.com" :class="inputClass" />
+                </div>
+              </div>
+            </details>
+
             <label class="flex items-center gap-3 cursor-pointer">
               <div class="relative">
                 <input type="checkbox" v-model="regLookingForTeam" class="sr-only peer" @change="regLookingForTeam && (regWantCreateTeam = false)" />
@@ -542,6 +599,32 @@ async function saveProfile() {
                 </button>
               </div>
             </div>
+            <!-- Social links -->
+            <details class="group">
+              <summary class="text-sm text-text-secondary cursor-pointer hover:text-text-primary transition-colors select-none">+ Social links <span class="text-xs text-text-tertiary">(optional)</span></summary>
+              <div class="mt-3 space-y-3 pl-3 border-l-2 border-border">
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">Discord</label>
+                  <input v-model="profileDiscord" type="text" placeholder="username#1234" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">Twitter / X</label>
+                  <input v-model="profileTwitter" type="text" placeholder="@handle" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">Telegram</label>
+                  <input v-model="profileTelegram" type="text" placeholder="@username" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">LinkedIn</label>
+                  <input v-model="profileLinkedin" type="text" placeholder="linkedin.com/in/yourname" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-secondary mb-1">Website</label>
+                  <input v-model="profileWebsite" type="text" placeholder="https://yoursite.com" :class="inputClass" />
+                </div>
+              </div>
+            </details>
             <label class="flex items-center gap-3 cursor-pointer">
               <div class="relative">
                 <input type="checkbox" v-model="profileLookingForTeam" class="sr-only peer" />

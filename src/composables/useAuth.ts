@@ -11,6 +11,11 @@ export interface User {
   themes: string[]
   preferredModel: string
   bio: string
+  discord: string
+  twitter: string
+  telegram: string
+  linkedin: string
+  website: string
   teamId: string | null
   lookingForTeam: boolean
   createdAt: string
@@ -41,6 +46,11 @@ interface RegisterData {
   themes: string[]
   preferredModel: string
   bio: string
+  discord: string
+  twitter: string
+  telegram: string
+  linkedin: string
+  website: string
   lookingForTeam: boolean
 }
 
