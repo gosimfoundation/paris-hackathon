@@ -13,10 +13,7 @@ const { t } = useI18n()
         </h2>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 reveal">
-        <a href="https://github.com/OpenBMB/MiniCPM" target="_blank" class="glass-card glass-card-glow glow-border sponsor-logo-card p-8 flex items-center justify-center transition-all group block h-28">
-          <img src="/sponsors/minicpm.svg" alt="MiniCPM" class="max-h-12 w-auto max-w-[180px] object-contain" />
-        </a>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 reveal">
         <a href="https://z.ai/" target="_blank" class="glass-card glass-card-glow glow-border sponsor-logo-card p-8 flex items-center justify-center transition-all group block h-28">
           <img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI" class="max-h-[4.5rem] w-auto max-w-[320px] object-contain" />
         </a>

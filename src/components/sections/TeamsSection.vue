@@ -129,14 +129,12 @@ function getTrackLabel(trackId: string) {
 }
 
 const modelOptions = [
-  { id: 'MiniCPM', label: 'MiniCPM', icon: assetUrl('/sponsors/minicpm-avatar.webp') },
   { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
   { id: 'MiniMax', label: 'MiniMax', icon: assetUrl('/sponsors/minimax.png') },
   { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi.png') },
 ]
 
 const avatarPresets = [
-  { id: 'minicpm', label: 'MiniCPM', src: assetUrl('/sponsors/minicpm-avatar.webp') },
   { id: 'glm', label: 'GLM', src: assetUrl('/sponsors/zhipu-v2.png') },
   { id: 'minimax', label: 'MiniMax', src: assetUrl('/sponsors/minimax.png') },
   { id: 'kimi', label: 'Kimi', src: assetUrl('/sponsors/kimi.png') },

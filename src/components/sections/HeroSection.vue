@@ -121,13 +121,11 @@ onMounted(() => {
       <div class="mb-6">
         <p class="text-sm md:text-lg text-text-primary/80 font-light tracking-wide">
           Sponsored by Your Favorite Tokens from
-          <span class="font-semibold text-text-primary">MiniCPM</span>,
           <span class="font-semibold text-text-primary">GLM</span>,
           <span class="font-semibold text-text-primary">Kimi</span>,
           <span class="font-semibold text-text-primary">MiniMax</span>
         </p>
-        <div class="grid grid-cols-2 md:flex md:items-center md:justify-center gap-6 md:gap-14 mt-6 max-w-sm md:max-w-none mx-auto">
-          <div class="flex items-center justify-center"><img src="/sponsors/minicpm.svg" alt="MiniCPM" class="h-10 md:h-[3.3rem] w-auto object-contain brightness-0 invert opacity-90" /></div>
+        <div class="flex items-center justify-center gap-6 md:gap-14 mt-6 max-w-sm md:max-w-none mx-auto">
           <div class="flex items-center justify-center"><img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="h-6 md:h-[4.75rem] w-auto object-contain brightness-0 invert opacity-90" /></div>
           <div class="flex items-center justify-center"><img src="/sponsors/kimi-wide.webp" alt="Moonshot AI (Kimi)" class="h-6 md:h-9 w-auto object-contain brightness-0 invert opacity-90" /></div>
           <div class="flex items-center justify-center"><img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="h-6 md:h-9 w-auto object-contain brightness-0 invert opacity-90" /></div>
