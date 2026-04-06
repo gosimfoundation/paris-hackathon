@@ -7,6 +7,12 @@ import { teamFilter } from '../../composables/useTeamFilter'
 
 const { t } = useI18n()
 const { user, isLoggedIn, promptAuth } = useAuth()
+// GitHub avatar helper
+function getGitHubAvatar(githubId?: string): string {
+  if (!githubId) return '/default-avatar.svg'
+  return `https://avatars.githubusercontent.com/${githubId.replace(/^@/, '')}`
+}
+
 
 const {
   teams, users, totalMembers, totalRegistered, spotsLeft, isFull, progress,
@@ -445,7 +451,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
           <!-- Member slots grid -->
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
             <div v-for="member in getTeamMembers(team.id)" :key="member.id" class="flex items-center gap-2 px-3 py-2.5 bg-bg-elevated/60 border border-border-subtle rounded-lg">
-              <img :src="assetUrl(member.avatar) || assetUrl('/default-avatar.svg')" class="w-7 h-7 rounded-full shrink-0 object-cover" />
+              <img :src="assetUrl(member.avatar) || getGitHubAvatar(member.githubId)" class="w-7 h-7 rounded-full shrink-0 object-cover" />
               <div class="min-w-0">
                 <span v-if="member.id === team.leaderId" class="text-[9px] text-amber-500 font-semibold block leading-tight flex items-center gap-0.5"><img :src="tw.crown" class="w-2.5 h-2.5" /> Lead</span>
                 <span class="text-xs text-text-secondary truncate block">{{ member.name }}</span>
@@ -746,7 +752,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                 <p class="text-xs text-text-muted uppercase tracking-wider mb-3 font-semibold">{{ t('teams.membersLabel') }}</p>
                 <div class="space-y-3">
                   <div v-for="member in getTeamMembers(viewingTeam.id)" :key="member.id" class="flex items-center gap-3 p-3 bg-bg-elevated">
-                    <img :src="assetUrl(member.avatar) || assetUrl('/default-avatar.svg')" class="w-8 h-8 rounded-full shrink-0 object-cover border border-border" />
+                    <img :src="assetUrl(member.avatar) || getGitHubAvatar(member.githubId)" class="w-8 h-8 rounded-full shrink-0 object-cover border border-border" />
                     <div class="flex-1 min-w-0">
                       <span class="text-sm font-semibold text-text-primary">{{ member.name }}</span>
                       <span v-if="member.id === viewingTeam.leaderId" class="text-[10px] text-amber-600 ml-1">{{ t('teams.lead') }}</span>
@@ -819,7 +825,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                 <div class="space-y-2">
                   <div v-for="pu in viewingTeam.pendingUsers" :key="pu.id" class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-2 min-w-0">
-                      <img :src="assetUrl(pu.avatar) || assetUrl('/default-avatar.svg')" class="w-6 h-6 rounded-full shrink-0 object-cover" />
+                      <img :src="assetUrl(pu.avatar) || getGitHubAvatar(pu.githubId)" class="w-6 h-6 rounded-full shrink-0 object-cover" />
                       <span class="text-sm text-text-primary truncate">{{ pu.name }}</span>
                       <span v-if="pu.role" class="text-[10px] text-text-muted truncate">{{ pu.role }}</span>
                     </div>

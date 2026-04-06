@@ -88,7 +88,7 @@ function openUserModal(user: User) {
         >
           <!-- Avatar + name + role -->
           <div class="flex items-center gap-3 mb-2">
-            <img :src="assetUrl(user.avatar) || assetUrl('/default-avatar.svg')" class="w-10 h-10 rounded-full shrink-0 object-cover border border-border" />
+            <img :src="assetUrl(user.avatar) || user.githubId ? 'https://avatars.githubusercontent.com/' + user.githubId.replace(/^@/, '') : assetUrl('/default-avatar.svg')" class="w-10 h-10 rounded-full shrink-0 object-cover border border-border" />
             <div class="min-w-0">
               <h3 class="font-bold text-text-primary text-sm truncate group-hover:text-accent transition-colors">{{ user.name }}</h3>
               <p v-if="user.role" class="text-[11px] text-text-secondary truncate">{{ user.role }}</p>
@@ -154,7 +154,7 @@ function openUserModal(user: User) {
 
             <!-- Profile header -->
             <div class="flex items-center gap-4 mb-6">
-              <img :src="assetUrl(viewingUser.avatar) || assetUrl('/default-avatar.svg')" class="w-16 h-16 rounded-full object-cover border border-border" />
+              <img :src="assetUrl(viewingUser.avatar) || viewingUser.githubId ? 'https://avatars.githubusercontent.com/' + viewingUser.githubId.replace(/^@/, '') : assetUrl('/default-avatar.svg')" class="w-16 h-16 rounded-full object-cover border border-border" />
               <div>
                 <h3 class="text-2xl font-bold text-text-primary">{{ viewingUser.name }}</h3>
                 <p v-if="viewingUser.role" class="text-sm text-text-secondary">{{ viewingUser.role }}</p>
@@ -205,7 +205,7 @@ function openUserModal(user: User) {
             <div v-if="getUserTeam(viewingUser)" class="p-4 bg-bg-elevated">
               <p class="text-xs text-text-muted uppercase tracking-wider mb-2 font-semibold">Team</p>
               <div class="flex items-center gap-3">
-                <img :src="assetUrl(getUserTeam(viewingUser)!.avatar) || assetUrl('/default-avatar.svg')" class="w-8 h-8 rounded-full object-cover border border-border" />
+                <img :src="assetUrl(getUserTeam(viewingUser)!.avatar) || user.githubId ? 'https://avatars.githubusercontent.com/' + user.githubId.replace(/^@/, '') : assetUrl('/default-avatar.svg')" class="w-8 h-8 rounded-full object-cover border border-border" />
                 <span class="text-sm font-semibold text-text-primary">{{ getUserTeam(viewingUser)!.name }}</span>
               </div>
             </div>

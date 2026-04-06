@@ -147,7 +147,7 @@ onMounted(() => {
           Powered by the best open-source models on the planet
         </p>
         <div class="flex items-center justify-center gap-6 md:gap-14 mt-6 max-w-sm md:max-w-none mx-auto">
-          <a href="https://z.ai/" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--zhipu"><img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="h-6 md:h-[4.75rem] w-auto object-contain brightness-0 invert" /></a>
+          <a href="https://z.ai/" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--zhipu"><img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="h-8 md:h-[4.75rem] w-auto object-contain brightness-0 invert" /></a>
           <a href="https://www.kimi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--kimi"><img src="/sponsors/kimi-wide.webp" alt="Moonshot AI (Kimi)" class="h-6 md:h-9 w-auto object-contain brightness-0 invert" /></a>
           <a href="https://www.minimaxi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--minimax"><img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="h-6 md:h-9 w-auto object-contain brightness-0 invert" /></a>
         </div>

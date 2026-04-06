@@ -2,6 +2,8 @@
 import { useI18n } from '../composables/useI18n'
 import { computed } from 'vue'
 
+console.log('RulesPage loading')
+
 const { locale } = useI18n()
 
 const isEn = computed(() => locale.value === 'en')

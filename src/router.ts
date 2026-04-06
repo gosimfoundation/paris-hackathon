@@ -1,11 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import HomePage from './pages/HomePage.vue'
+import VisionPage from './pages/VisionPage.vue'
+import RulesPage from './pages/RulesPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', component: () => import('./pages/HomePage.vue') },
-    { path: '/vision', component: () => import('./pages/VisionPage.vue') },
-    { path: '/rules', component: () => import('./pages/RulesPage.vue') },
+    { path: '/', component: HomePage },
+    { path: '/vision', component: VisionPage },
+    { path: '/rules', component: RulesPage },
   ],
   scrollBehavior(_to, _from, savedPosition) {
     if (savedPosition) return savedPosition
