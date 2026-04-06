@@ -18,7 +18,7 @@ const isEn = computed(() => locale.value === 'en')
       </router-link>
 
       <template v-if="isEn">
-        <h1 class="heading-serif text-4xl md:text-5xl text-text-primary mb-4">GOSIM Agentic Hackathon 2026 — Explore Upstream</h1>
+        <h1 class="heading-serif text-4xl md:text-5xl text-text-primary mb-4">GOSIM Agentic Hackathon 2026 — Go Upstream</h1>
         <p class="text-text-tertiary mb-12">GOSIM Paris 2026 | May 5–6 | STATION F, Paris</p>
 
         <hr class="border-border mb-12" />
@@ -31,7 +31,7 @@ const isEn = computed(() => locale.value === 'en')
         <p>AI is advancing at a pace that can leave anyone disoriented. Autonomous agents are reshaping how software is built, how work gets done, and how humans relate to technology. Reports from leading AI labs confirm what many already feel: the landscape of human labor and creativity is shifting beneath our feet.</p>
         <p>A great river is surging forward. Most people stand downstream — consuming AI-generated content, using tools others have built, finding their place within paradigms already set.</p>
         <p>But some choose to go upstream.</p>
-        <p>"Upstream" — the GOSIM Agentic Hackathon borrows this word and gives it a broader meaning — <strong>Explore Upstream</strong>: not merely using AI, but understanding it; not following trends, but shaping them; not just building applications, but asking the fundamental questions that will define the future.</p>
+        <p>"Upstream" — the GOSIM Agentic Hackathon borrows this word and gives it a broader meaning — <strong>Go Upstream</strong>: not merely using AI, but understanding it; not following trends, but shaping them; not just building applications, but asking the fundamental questions that will define the future.</p>
         <p class="italic text-text-tertiary">See the world as it is. Step into the arena. Explore upstream. Love it.</p>
 
         <hr class="border-border my-12" />
@@ -114,7 +114,7 @@ const isEn = computed(() => locale.value === 'en')
         <p>AI 的发展速度之快，足以让任何人迷失方向。自主智能体（Agent）正在重塑软件的构建方式、工作的运转模式，以及人与技术之间的关系。来自顶尖 AI 实验室的报告印证了许多人已有的感知：人类劳动与创造力的版图正在脚下发生剧变。</p>
         <p>大河奔涌。绝大多数人站在下游——消费 AI 生成的内容，使用别人构建的工具，在已成型的范式里寻找自己的位置。</p>
         <p>但还有一些人选择溯流而上。</p>
-        <p>"upstream"，GOSIM Agentic Hackathon 借用这个词，赋予它更广的含义——<strong>向上探索（Explore Upstream）</strong>：不止于使用 AI，而是去理解它；不止于跟随趋势，而是去塑造它；不止于构建应用，而是去追问那些定义未来的根本问题。</p>
+        <p>"upstream"，GOSIM Agentic Hackathon 借用这个词，赋予它更广的含义——<strong>向上探索（Go Upstream）</strong>：不止于使用 AI，而是去理解它；不止于跟随趋势，而是去塑造它；不止于构建应用，而是去追问那些定义未来的根本问题。</p>
         <p class="italic text-text-tertiary">认清本质，以身入局，向上探索，热爱生活。</p>
 
         <hr class="border-border my-12" />

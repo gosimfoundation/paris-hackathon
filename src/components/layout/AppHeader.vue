@@ -262,6 +262,12 @@ async function saveProfile() {
         >
           Vision
         </router-link>
+        <router-link
+          to="/rules"
+          class="text-xs text-text-primary/80 hover:text-text-primary transition-colors cursor-pointer relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-accent after:transition-all hover:after:w-full"
+        >
+          Rules
+        </router-link>
 
         <!-- Theme toggle -->
         <button
@@ -348,6 +354,13 @@ async function saveProfile() {
           class="block py-3 text-text-tertiary hover:text-text-primary transition-colors"
         >
           Vision
+        </router-link>
+        <router-link
+          to="/rules"
+          @click="mobileOpen = false"
+          class="block py-3 text-text-tertiary hover:text-text-primary transition-colors"
+        >
+          Rules
         </router-link>
         <button
           @click="toggleLocale"

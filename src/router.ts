@@ -5,6 +5,7 @@ const router = createRouter({
   routes: [
     { path: '/', component: () => import('./pages/HomePage.vue') },
     { path: '/vision', component: () => import('./pages/VisionPage.vue') },
+    { path: '/rules', component: () => import('./pages/RulesPage.vue') },
   ],
   scrollBehavior(_to, _from, savedPosition) {
     if (savedPosition) return savedPosition
