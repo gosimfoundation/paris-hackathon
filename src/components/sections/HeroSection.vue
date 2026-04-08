@@ -56,11 +56,6 @@ const timeUnits = [
   { key: 'hero.secs', value: seconds },
 ]
 
-// Slow down hero background video
-const heroBgVideo = ref<HTMLVideoElement | null>(null)
-onMounted(() => {
-  if (heroBgVideo.value) heroBgVideo.value.playbackRate = 0.5
-})
 
 // Magnetic button effect
 const ctaRef = ref<HTMLElement | null>(null)
@@ -97,11 +92,11 @@ onMounted(() => {
     <!-- Background video -->
     <div class="absolute inset-0">
       <video
-        ref="heroBgVideo"
         autoplay loop muted playsinline webkit-playsinline
         preload="auto"
         poster="/photos/hero-bg-poster.jpg"
         class="w-full h-full object-cover opacity-30"
+        style="will-change: transform; transform: translateZ(0);"
       ><source src="/photos/hero-bg.mp4" type="video/mp4" /></video>
     </div>
 
@@ -147,9 +142,9 @@ onMounted(() => {
           Powered by the best open-source models on the planet
         </p>
         <div class="flex items-center justify-center gap-6 md:gap-14 mt-6 max-w-sm md:max-w-none mx-auto">
-          <a href="https://z.ai/" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--zhipu"><img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="h-8 md:h-[4.75rem] w-auto object-contain brightness-0 invert" /></a>
-          <a href="https://www.kimi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--kimi"><img src="/sponsors/kimi-wide.webp" alt="Moonshot AI (Kimi)" class="h-6 md:h-9 w-auto object-contain brightness-0 invert" /></a>
           <a href="https://www.minimaxi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--minimax"><img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="h-6 md:h-9 w-auto object-contain brightness-0 invert" /></a>
+          <a href="https://www.kimi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--kimi"><img src="/sponsors/kimi-wide.webp" alt="Moonshot AI (Kimi)" class="h-6 md:h-9 w-auto object-contain brightness-0 invert" /></a>
+          <a href="https://z.ai/" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--zhipu"><img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="h-8 md:h-[4.75rem] w-auto object-contain brightness-0 invert" /></a>
         </div>
       </div>
 

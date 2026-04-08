@@ -1,6 +1,6 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { User } from './useAuth'
-import { API_BASE } from './api'
+import { supabase } from '../lib/supabase'
 
 export interface Team {
   id: string
@@ -20,23 +20,57 @@ export interface Team {
   createdAt: string
 }
 
-const API_URL = `${API_BASE}/api/teams`
-
 const teams = ref<Team[]>([])
 const users = ref<User[]>([])
 const loading = ref(false)
 const error = ref('')
 const lastUpdated = ref<Date | null>(null)
 
-let pollTimer: number | undefined
+let realtimeSetup = false
 
-function getToken() {
-  return localStorage.getItem('auth_token')
+function profileRowToUser(row: Record<string, any>): User {
+  return {
+    id: row.id,
+    name: row.name,
+    email: '',
+    githubId: row.github_id ?? '',
+    role: row.role ?? '',
+    avatar: row.avatar ?? '',
+    themes: row.themes ?? [],
+    preferredModel: row.preferred_model ?? '',
+    bio: row.bio ?? '',
+    discord: row.discord ?? '',
+    twitter: row.twitter ?? '',
+    telegram: row.telegram ?? '',
+    linkedin: row.linkedin ?? '',
+    website: row.website ?? '',
+    teamId: row.team_id ?? null,
+    lookingForTeam: row.looking_for_team ?? false,
+    passwordChanged: row.password_changed ?? false,
+    createdAt: row.created_at ?? '',
+  }
 }
 
-function authHeaders(): Record<string, string> {
-  const t = getToken()
-  return t ? { Authorization: `Bearer ${t}` } : {}
+function teamRowToTeam(row: Record<string, any>, allUsers: User[]): Team {
+  const members = allUsers.filter(u => u.teamId === row.id)
+  const pendingUsers = allUsers.filter(u => (row.pending_joins ?? []).includes(u.id))
+  return {
+    id: row.id,
+    name: row.name,
+    leaderId: row.leader_id,
+    avatar: row.avatar ?? '',
+    githubRepo: row.github_repo ?? '',
+    themes: row.themes ?? [],
+    model: row.model ?? '',
+    projectIdea: row.project_idea ?? '',
+    locked: row.locked ?? false,
+    maxSize: row.max_size ?? 3,
+    likes: row.likes ?? 0,
+    members,
+    pendingJoins: row.pending_joins ?? [],
+    pendingUsers,
+    createdAt: row.created_at ?? '',
+  }
 }
 
 export function useTeams() {
@@ -48,7 +82,7 @@ export function useTeams() {
   const progress = computed(() => (totalMembers.value / maxParticipants.value) * 100)
 
   const modelStats = computed(() => {
-    const stats: Record<string, number> = { GLM: 0, MiniMax: 0, Kimi: 0 }
+    const stats: Record<string, number> = { MiniMax: 0, Kimi: 0, GLM: 0 }
     teams.value.forEach((t) => {
       if (t.model && t.model in stats) stats[t.model]++
     })
@@ -56,23 +90,14 @@ export function useTeams() {
   })
 
   async function fetchTeams() {
-    try {
-      const [teamsRes, usersRes] = await Promise.all([
-        fetch(API_URL),
-        fetch(`${API_BASE}/api/users`),
-      ])
-      if (teamsRes.ok) {
-        const data = await teamsRes.json()
-        teams.value = data.teams
-      }
-      if (usersRes.ok) {
-        const data = await usersRes.json()
-        users.value = data.users
-      }
-      lastUpdated.value = new Date()
-    } catch {
-      // silent
-    }
+    const [{ data: profileRows }, { data: teamRows }] = await Promise.all([
+      supabase.from('profiles').select('*'),
+      supabase.from('teams').select('*'),
+    ])
+    const allUsers = (profileRows ?? []).map(profileRowToUser)
+    users.value = allUsers
+    teams.value = (teamRows ?? []).map(r => teamRowToTeam(r, allUsers))
+    lastUpdated.value = new Date()
   }
 
   async function createTeam(payload: {
@@ -87,189 +112,188 @@ export function useTeams() {
   }) {
     loading.value = true
     error.value = ''
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { error.value = 'Not logged in'; loading.value = false; return false }
     try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify(payload),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        error.value = data.error || 'Failed to create team'
-        return false
-      }
+      const { data: team, error: insertError } = await supabase.from('teams').insert({
+        name: payload.name,
+        leader_id: session.user.id,
+        avatar: payload.avatar,
+        github_repo: payload.githubRepo,
+        themes: payload.themes,
+        model: payload.model,
+        project_idea: payload.projectIdea,
+        locked: payload.locked,
+        max_size: payload.maxSize,
+      }).select().single()
+      if (insertError) { error.value = insertError.message; return false }
+      // 把自己加入团队
+      await supabase.from('profiles').update({ team_id: team.id }).eq('id', session.user.id)
       await fetchTeams()
       return true
-    } catch {
-      error.value = 'Network error'
-      return false
-    } finally {
-      loading.value = false
-    }
+    } catch { error.value = 'Network error'; return false }
+    finally { loading.value = false }
   }
 
   async function editTeam(teamId: string, payload: Record<string, any>) {
     loading.value = true
     error.value = ''
     try {
-      const res = await fetch(`${API_URL}/${teamId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify(payload),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        error.value = data.error || 'Failed to edit team'
-        return false
-      }
+      const update: Record<string, any> = {}
+      if (payload.name !== undefined) update.name = payload.name
+      if (payload.avatar !== undefined) update.avatar = payload.avatar
+      if (payload.githubRepo !== undefined) update.github_repo = payload.githubRepo
+      if (payload.themes !== undefined) update.themes = payload.themes
+      if (payload.model !== undefined) update.model = payload.model
+      if (payload.projectIdea !== undefined) update.project_idea = payload.projectIdea
+      if (payload.locked !== undefined) update.locked = payload.locked
+      if (payload.maxSize !== undefined) update.max_size = payload.maxSize
+
+      const { error: updateError } = await supabase.from('teams').update(update).eq('id', teamId)
+      if (updateError) { error.value = updateError.message; return false }
       await fetchTeams()
       return true
-    } catch {
-      error.value = 'Network error'
-      return false
-    } finally {
-      loading.value = false
-    }
+    } catch { error.value = 'Network error'; return false }
+    finally { loading.value = false }
+  }
+
+  async function cancelJoin(teamId: string) {
+    loading.value = true
+    error.value = ''
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { error.value = 'Not logged in'; loading.value = false; return false }
+    try {
+      const team = teams.value.find(t => t.id === teamId)
+      if (!team) { error.value = 'Team not found'; return false }
+      const pendingJoins = (team.pendingJoins ?? []).filter(id => id !== session.user.id)
+      const { data: updated, error: updateError } = await supabase.from('teams').update({ pending_joins: pendingJoins }).eq('id', teamId).select('id')
+      if (updateError) { error.value = updateError.message; console.error('[cancelJoin] error:', updateError); return false }
+      if (!updated || updated.length === 0) { error.value = 'Permission denied (RLS)'; console.error('[cancelJoin] 0 rows updated — RLS blocked?', { teamId, userId: session.user.id }); return false }
+      await fetchTeams()
+      return true
+    } catch (e) { error.value = 'Network error'; console.error('[cancelJoin] exception:', e); return false }
+    finally { loading.value = false }
   }
 
   async function deleteTeam(teamId: string) {
     loading.value = true
     error.value = ''
     try {
-      const res = await fetch(`${API_URL}/${teamId}`, {
-        method: 'DELETE',
-        headers: authHeaders(),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        error.value = data.error || 'Failed to delete team'
-        return false
-      }
+      const { error: deleteError } = await supabase.from('teams').delete().eq('id', teamId)
+      if (deleteError) { error.value = deleteError.message; return false }
       await fetchTeams()
       return true
-    } catch {
-      error.value = 'Network error'
-      return false
-    } finally {
-      loading.value = false
-    }
+    } catch { error.value = 'Network error'; return false }
+    finally { loading.value = false }
   }
 
   async function joinTeam(teamId: string) {
     loading.value = true
     error.value = ''
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { error.value = 'Not logged in'; loading.value = false; return false }
     try {
-      const res = await fetch(`${API_URL}/${teamId}/join`, {
-        method: 'POST',
-        headers: authHeaders(),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        error.value = data.error || 'Failed to join team'
-        return false
-      }
+      const team = teams.value.find(t => t.id === teamId)
+      if (!team) { error.value = 'Team not found'; return false }
+      if (team.members.length >= team.maxSize) { error.value = 'Team is full'; return false }
+      if (team.locked) { error.value = 'Team is locked'; return false }
+      const pendingJoins = [...(team.pendingJoins ?? []), session.user.id]
+      const { data: updated, error: updateError } = await supabase.from('teams').update({ pending_joins: pendingJoins }).eq('id', teamId).select('id')
+      if (updateError) { error.value = updateError.message; console.error('[joinTeam] error:', updateError); return false }
+      if (!updated || updated.length === 0) { error.value = 'Permission denied (RLS)'; console.error('[joinTeam] 0 rows updated — RLS blocked?', { teamId, userId: session.user.id }); return false }
       await fetchTeams()
       return true
-    } catch {
-      error.value = 'Network error'
-      return false
-    } finally {
-      loading.value = false
-    }
+    } catch (e) { error.value = 'Network error'; console.error('[joinTeam] exception:', e); return false }
+    finally { loading.value = false }
   }
 
-  async function leaveTeam(teamId: string) {
+  async function leaveTeam(_teamId: string) {
     loading.value = true
     error.value = ''
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { error.value = 'Not logged in'; loading.value = false; return false }
     try {
-      const res = await fetch(`${API_URL}/${teamId}/leave`, {
-        method: 'POST',
-        headers: authHeaders(),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        error.value = data.error || 'Failed to leave team'
-        return false
-      }
+      await supabase.from('profiles').update({ team_id: null }).eq('id', session.user.id)
       await fetchTeams()
       return true
-    } catch {
-      error.value = 'Network error'
-      return false
-    } finally {
-      loading.value = false
-    }
+    } catch { error.value = 'Network error'; return false }
+    finally { loading.value = false }
   }
 
   async function approveJoin(teamId: string, userId: string) {
     loading.value = true
     error.value = ''
     try {
-      const res = await fetch(`${API_URL}/${teamId}/approve/${userId}`, {
-        method: 'POST',
-        headers: authHeaders(),
+      const team = teams.value.find(t => t.id === teamId)
+      if (!team) { error.value = 'Team not found'; return false }
+      if (team.members.length >= team.maxSize) { error.value = 'Team is full'; return false }
+      // 用 security definer 函数绕过 RLS（可跨用户写 profiles.team_id）
+      const { error: fnError } = await supabase.rpc('approve_team_member', {
+        p_team_id: teamId,
+        p_user_id: userId,
       })
-      if (!res.ok) {
-        const data = await res.json()
-        error.value = data.error || 'Failed to approve'
-        return false
-      }
+      if (fnError) { error.value = fnError.message; return false }
       await fetchTeams()
       return true
-    } catch {
-      error.value = 'Network error'
-      return false
-    } finally {
-      loading.value = false
-    }
+    } catch { error.value = 'Network error'; return false }
+    finally { loading.value = false }
   }
 
   async function rejectJoin(teamId: string, userId: string) {
     loading.value = true
     error.value = ''
     try {
-      const res = await fetch(`${API_URL}/${teamId}/reject/${userId}`, {
-        method: 'POST',
-        headers: authHeaders(),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        error.value = data.error || 'Failed to reject'
-        return false
-      }
+      const team = teams.value.find(t => t.id === teamId)
+      if (!team) { error.value = 'Team not found'; return false }
+      const pendingJoins = (team.pendingJoins ?? []).filter(id => id !== userId)
+      const { data: updated, error: updateError } = await supabase.from('teams').update({ pending_joins: pendingJoins }).eq('id', teamId).select('id')
+      if (updateError) { error.value = updateError.message; return false }
+      if (!updated || updated.length === 0) { error.value = 'Permission denied (RLS)'; return false }
       await fetchTeams()
       return true
-    } catch {
-      error.value = 'Network error'
-      return false
-    } finally {
-      loading.value = false
-    }
+    } catch { error.value = 'Network error'; return false }
+    finally { loading.value = false }
+  }
+
+  async function kickMember(teamId: string, userId: string) {
+    loading.value = true
+    error.value = ''
+    try {
+      const { error: fnError } = await supabase.rpc('kick_team_member', {
+        p_team_id: teamId,
+        p_user_id: userId,
+      })
+      if (fnError) { error.value = fnError.message; return false }
+      await fetchTeams()
+      return true
+    } catch { error.value = 'Network error'; return false }
+    finally { loading.value = false }
   }
 
   async function likeTeam(teamId: string) {
-    try {
-      const res = await fetch(`${API_URL}/${teamId}/like`, { method: 'POST' })
-      if (!res.ok) return false
-      const data = await res.json()
-      const team = teams.value.find(t => t.id === teamId)
-      if (team) team.likes = data.likes ?? data.team?.likes ?? team.likes + 1
-      return true
-    } catch { return false }
+    const team = teams.value.find(t => t.id === teamId)
+    if (!team) return false
+    const { error: updateError } = await supabase.from('teams').update({ likes: team.likes + 1 }).eq('id', teamId)
+    if (updateError) return false
+    team.likes++
+    return true
   }
 
   onMounted(() => {
     fetchTeams()
-    pollTimer = window.setInterval(fetchTeams, 30000)
-  })
-
-  onUnmounted(() => {
-    if (pollTimer) clearInterval(pollTimer)
+    if (!realtimeSetup) {
+      realtimeSetup = true
+      supabase
+        .channel('teams-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, fetchTeams)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchTeams)
+        .subscribe()
+    }
   })
 
   return {
     teams, users, totalMembers, totalRegistered, maxParticipants, spotsLeft, isFull, progress,
     modelStats, loading, error, lastUpdated,
-    fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam, approveJoin, rejectJoin,
+    fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, cancelJoin, leaveTeam, likeTeam, approveJoin, rejectJoin, kickMember,
   }
 }

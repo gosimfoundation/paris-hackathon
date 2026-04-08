@@ -53,7 +53,7 @@ export default {
   },
   tracks: {
     title: '七大主题',
-    intro: '参赛者将使用业界领先的开源大语言模型——包括智谱 GLM、月之暗面 Kimi 和 MiniMax——亲身体验它们在文本、语音、音乐、视频、演示文稿生成等方面丰富而强大的能力。我们希望每一位参赛者都能切身感受到开放 AI 的美好与强大，并对未来的世界建立更强的信心。',
+    intro: '参赛者将使用业界领先的开源大语言模型——包括 MiniMax、月之暗面 Kimi 和智谱 GLM——亲身体验它们在文本、语音、音乐、视频、演示文稿生成等方面丰富而强大的能力。我们希望每一位参赛者都能切身感受到开放 AI 的美好与强大，并对未来的世界建立更强的信心。',
     themes: [
       {
         number: '01',
@@ -116,7 +116,7 @@ export default {
   tech: {
     title: '开源',
     titleAccent: 'AI',
-    desc_prefix: '在一个 AI 准入日益被资本把控的世界里，开源模型不仅仅是一种技术选择——它是对公平获取权的捍卫。通过在 GLM、Kimi、MiniMax 以及更广泛的开源生态上进行构建，参赛者不仅在使用强大的工具，也在表明一种立场：',
+    desc_prefix: '在一个 AI 准入日益被资本把控的世界里，开源模型不仅仅是一种技术选择——它是对公平获取权的捍卫。通过在 MiniMax、Kimi、GLM 以及更广泛的开源生态上进行构建，参赛者不仅在使用强大的工具，也在表明一种立场：',
     desc_bold: '强大的 AI 应该属于每一个人',
     desc_suffix: '。',
     frameworks: '开源框架与工具',
@@ -138,15 +138,15 @@ export default {
   },
   awards: {
     title: '奖项',
-    subtitle: '5 个奖项，表彰在创新性、技术深度和实际影响力方面表现最佳的项目。',
+    subtitle: '3 个奖项，表彰在创新性、技术深度和实际影响力方面表现最佳的项目。',
     upstream2: 'Upstream 奖 II',
     upstream2By: '由 GOSIM 颁发',
-    zhipu: '智谱奖',
-    zhipuBy: '$2,000 · 由智谱 AI 赞助',
     minimax: 'MiniMax 奖',
-    minimaxBy: '$2,000 · 由 MiniMax 赞助',
+    minimaxBy: '',
     moonshot: 'Moonshot 奖',
-    moonshotBy: 'Token 额度 · 由 Moonshot AI 赞助',
+    moonshotBy: '',
+    zhipu: '智谱奖',
+    zhipuBy: '',
     upstream: 'Upstream 奖',
     upstreamBy: '由 GOSIM 颁发',
     allParticipants: '所有完赛队伍均可获得赞助商提供的',
@@ -258,7 +258,7 @@ export default {
       { q: '需要提交什么？', a: '一个可运行的演示、一个开源的 GitHub 仓库和一份简短的幻灯片。每队最多 5 分钟展示，随后 3 分钟问答。具体时间可能调整，请留意后续更新。' },
       { q: '必须用特定的 AI 模型吗？', a: '鼓励使用赞助商提供的模型（GLM、MiniMax、Kimi）——所有参赛者都会获得充足的 Token 额度。但你也可以使用其他模型或框架。' },
       { q: '参加免费吗？', a: '是的！报名免费。' },
-      { q: '有多少个奖项？', a: '共 5 个奖项——智谱奖、MiniMax 奖、Moonshot 奖，以及两个 Upstream 奖。奖品包括现金、高级数字产品、大语言模型 Token 额度等。' },
+      { q: '有多少个奖项？', a: '共 3 个赞助商奖项——MiniMax 奖、Moonshot 奖和智谱奖。奖品包括现金和大语言模型 Token 额度。' },
       { q: '场地在哪里？', a: 'STATION F，巴黎——全球最大的创业园区。地址：5 Parvis Alan Turing, 75013 Paris。' },
     ],
   },

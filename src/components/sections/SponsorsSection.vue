@@ -14,14 +14,14 @@ const { t } = useI18n()
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 reveal">
-        <a href="https://z.ai/" target="_blank" class="glass-card glass-card-glow glow-border sponsor-logo-card p-8 flex items-center justify-center transition-all group block h-28">
-          <img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI" class="max-h-[4.5rem] w-auto max-w-[320px] object-contain" />
-        </a>
         <a href="https://www.minimaxi.com" target="_blank" class="glass-card glass-card-glow glow-border sponsor-logo-card p-8 flex items-center justify-center transition-all group block h-28">
           <img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="max-h-10 w-auto max-w-[180px] object-contain" />
         </a>
         <a href="https://www.kimi.com" target="_blank" class="glass-card glass-card-glow glow-border sponsor-logo-card p-8 flex items-center justify-center transition-all group block h-28">
           <img src="/sponsors/kimi-wide.webp" alt="Moonshot AI" class="max-h-10 w-auto max-w-[180px] object-contain" />
+        </a>
+        <a href="https://z.ai/" target="_blank" class="glass-card glass-card-glow glow-border sponsor-logo-card p-8 flex items-center justify-center transition-all group block h-28">
+          <img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI" class="max-h-[4.5rem] w-auto max-w-[320px] object-contain" />
         </a>
       </div>
 

@@ -16,6 +16,7 @@ const { t } = useI18n()
         preload="auto"
         poster="/photos/hero-video-poster.jpg"
         class="w-full h-full object-cover opacity-15"
+        style="will-change: transform; transform: translateZ(0);"
       ><source src="/photos/hero-video-4k.mp4" type="video/mp4" /></video>
       <!-- Fade overlays -->
       <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-bg-primary to-transparent"></div>

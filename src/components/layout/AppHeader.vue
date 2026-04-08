@@ -7,9 +7,59 @@ import { useTeams } from '../../composables/useTeams'
 import { assetUrl } from '../../composables/api'
 
 const { t, locale, toggleLocale } = useI18n()
-const { user, isLoggedIn, login, register, logout, updateProfile, error: authError, showAuthModal, authModalTab } = useAuth()
+const { user, isLoggedIn, login, register, logout, updateProfile, changePassword, error: authError, showAuthModal, authModalTab, showChangePasswordModal } = useAuth()
+const newPassword = ref('')
+const confirmPassword = ref('')
+const changePwError = ref('')
+async function handleChangePassword() {
+  changePwError.value = ''
+  if (newPassword.value.length < 6) { changePwError.value = 'Password must be at least 6 characters'; return }
+  if (newPassword.value !== confirmPassword.value) { changePwError.value = 'Passwords do not match'; return }
+  const ok = await changePassword(newPassword.value)
+  if (ok) {
+    newPassword.value = ''
+    confirmPassword.value = ''
+    showHeaderToast('Password changed!')
+  } else {
+    changePwError.value = authError.value || 'Failed to change password'
+  }
+}
 const { isDark, toggleTheme } = useTheme()
-const { createTeam } = useTeams()
+const { createTeam, teams, approveJoin, rejectJoin, cancelJoin } = useTeams()
+
+const myTeam = computed(() =>
+  teams.value.find(t => t.id === user.value?.teamId) ||
+  teams.value.find(t => t.pendingJoins?.includes(user.value?.id ?? ''))
+)
+const myPendingTeams = computed(() =>
+  teams.value.filter(t =>
+    t.pendingJoins?.includes(user.value?.id ?? '') &&
+    t.id !== user.value?.teamId
+  )
+)
+const pendingCount = computed(() => {
+  if (!myTeam.value || myTeam.value.leaderId !== user.value?.id) return 0
+  return myTeam.value.pendingJoins?.length ?? 0
+})
+
+const headerToast = ref<{ msg: string; type: 'success' | 'error' } | null>(null)
+let headerToastTimer: number | undefined
+function showHeaderToast(msg: string, type: 'success' | 'error' = 'success') {
+  headerToast.value = { msg, type }
+  clearTimeout(headerToastTimer)
+  headerToastTimer = window.setTimeout(() => headerToast.value = null, 4000)
+}
+
+async function handleApprove(teamId: string, userId: string) {
+  await approveJoin(teamId, userId)
+}
+async function handleReject(teamId: string, userId: string) {
+  await rejectJoin(teamId, userId)
+}
+async function handleCancelJoin(teamId: string) {
+  const ok = await cancelJoin(teamId)
+  showHeaderToast(ok ? 'Application cancelled.' : 'Failed to cancel', ok ? 'success' : 'error')
+}
 
 const scrolled = ref(false)
 const mobileOpen = ref(false)
@@ -58,6 +108,11 @@ const regLookingForTeam = ref(false)
 const regWantCreateTeam = ref(false)
 const regTeamName = ref('')
 const regTeamTracks = ref<string[]>([])
+const regTeamGithubRepo = ref('')
+const regTeamModel = ref('')
+const regTeamProjectIdea = ref('')
+const regTeamMaxSize = ref(3)
+const regTeamLocked = ref(false)
 
 const regTrackOptions = [
   { id: 'agents-meet-apps', label: 'Agents Meet Apps' },
@@ -101,6 +156,11 @@ watch(showAuthModal, (open) => {
     regWantCreateTeam.value = false
     regTeamName.value = ''
     regTeamTracks.value = []
+    regTeamGithubRepo.value = ''
+    regTeamModel.value = ''
+    regTeamProjectIdea.value = ''
+    regTeamMaxSize.value = 3
+    regTeamLocked.value = false
   }
 })
 
@@ -134,12 +194,12 @@ async function submitRegister() {
     await createTeam({
       name: regTeamName.value.trim(),
       avatar: '',
-      githubRepo: '',
+      githubRepo: regTeamGithubRepo.value.trim(),
       themes: regTeamTracks.value,
-      model: '',
-      projectIdea: '',
-      locked: false,
-      maxSize: 3,
+      model: regTeamModel.value,
+      projectIdea: regTeamProjectIdea.value.trim(),
+      locked: regTeamLocked.value,
+      maxSize: regTeamMaxSize.value,
     })
   }
   authLoading.value = false
@@ -187,7 +247,13 @@ const trackOptions = [
   { id: 'agents-voices', label: 'Agents with Voices' },
 ]
 
-const modelChoices = ['GLM', 'MiniMax', 'Kimi']
+const modelChoices = ['MiniMax', 'Kimi', 'GLM']
+
+const showMyTeamModal = ref(false)
+
+function goToMyTeam() {
+  showMyTeamModal.value = true
+}
 
 function openProfileModal() {
   showUserDropdown.value = false
@@ -302,9 +368,13 @@ async function saveProfile() {
               leave-from-class="opacity-100 scale-100"
               leave-to-class="opacity-0 scale-95"
             >
-              <div v-if="showUserDropdown" class="absolute right-0 top-full mt-2 w-40 bg-bg-card border border-border  shadow-lg py-1 z-50">
+              <div v-if="showUserDropdown" class="absolute right-0 top-full mt-2 w-44 bg-bg-card border border-border shadow-lg py-1 z-50">
                 <button @click="openProfileModal" class="w-full text-left px-4 py-2 text-sm text-text-tertiary hover:text-text-primary hover:bg-bg-elevated transition-colors">
                   Edit Profile
+                </button>
+                <button v-if="isLoggedIn" @click="goToMyTeam(); showUserDropdown = false" class="w-full text-left px-4 py-2 text-sm text-text-tertiary hover:text-text-primary hover:bg-bg-elevated transition-colors flex items-center justify-between">
+                  <span>My Team</span>
+                  <span v-if="pendingCount > 0" class="text-xs bg-accent-red text-white rounded-full px-1.5 py-0.5 leading-none">{{ pendingCount }}</span>
                 </button>
                 <button @click="handleLogout(); showUserDropdown = false" class="w-full text-left px-4 py-2 text-sm text-text-tertiary hover:text-text-primary hover:bg-bg-elevated transition-colors">
                   Logout
@@ -555,6 +625,40 @@ async function saveProfile() {
                     </button>
                   </div>
                 </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">GitHub Repo (optional)</label>
+                  <input v-model="regTeamGithubRepo" type="text" placeholder="https://github.com/..." :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Model (optional)</label>
+                  <select v-model="regTeamModel" :class="[inputClass, 'appearance-none']">
+                    <option value="">Select a model</option>
+                    <option v-for="m in modelChoices" :key="m" :value="m">{{ m }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Project Idea (optional)</label>
+                  <input v-model="regTeamProjectIdea" type="text" placeholder="One sentence about your idea" :class="inputClass" />
+                </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Max Team Size</label>
+                  <select v-model="regTeamMaxSize" :class="[inputClass, 'appearance-none']">
+                    <option :value="1">1 person (solo)</option>
+                    <option :value="2">2 people</option>
+                    <option :value="3">3 people</option>
+                    <option :value="4">4 people</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <div class="relative">
+                      <input type="checkbox" v-model="regTeamLocked" class="sr-only peer" />
+                      <div class="w-9 h-5 bg-border rounded-full peer-checked:bg-accent-blue transition-colors"></div>
+                      <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-bg-card rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                    </div>
+                    <span class="text-sm text-text-secondary">Lock team (no join requests)</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -697,6 +801,140 @@ async function saveProfile() {
             </button>
           </form>
         </div>
+      </div>
+    </Transition>
+
+    <!-- My Team Modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showMyTeamModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showMyTeamModal = false"></div>
+          <div class="relative bg-bg-card border border-border w-full max-w-md max-h-[80vh] overflow-y-auto">
+            <button @click="showMyTeamModal = false" class="absolute top-4 right-4 text-text-secondary hover:text-text-primary">✕</button>
+
+            <!-- Leader 视图 -->
+            <template v-if="myTeam && myTeam.leaderId === user?.id">
+              <div class="p-6">
+                <h3 class="text-lg font-bold text-text-primary mb-1">My Team — {{ myTeam.name }}</h3>
+                <p class="text-xs text-text-tertiary mb-6">You are the team leader</p>
+
+                <!-- 成员列表 -->
+                <div class="mb-6">
+                  <p class="text-xs text-text-muted uppercase tracking-wider mb-3 font-semibold">Members ({{ myTeam.members.length }}/{{ myTeam.maxSize }})</p>
+                  <div class="space-y-2">
+                    <div v-for="m in myTeam.members" :key="m.id" class="flex items-center gap-3 p-2 bg-bg-elevated">
+                      <img :src="m.avatar || `https://avatars.githubusercontent.com/${m.githubId}`" class="w-8 h-8 rounded-full object-cover" />
+                      <span class="text-sm text-text-primary">{{ m.name }}</span>
+                      <span v-if="m.id === myTeam.leaderId" class="text-xs text-amber-500">Lead</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 待审批 -->
+                <div v-if="myTeam.pendingUsers?.length">
+                  <p class="text-xs text-amber-500 uppercase tracking-wider mb-3 font-semibold">Pending Requests ({{ myTeam.pendingUsers.length }})</p>
+                  <div class="space-y-2">
+                    <div v-for="pu in myTeam.pendingUsers" :key="pu.id" class="flex items-center justify-between gap-3 p-2 bg-bg-elevated border border-amber-600/20">
+                      <div class="flex items-center gap-3">
+                        <img :src="pu.avatar || `https://avatars.githubusercontent.com/${pu.githubId}`" class="w-8 h-8 rounded-full object-cover" />
+                        <div>
+                          <p class="text-sm text-text-primary">{{ pu.name }}</p>
+                          <p class="text-xs text-text-tertiary">{{ pu.role }}</p>
+                        </div>
+                      </div>
+                      <div class="flex gap-2">
+                        <button @click="handleApprove(myTeam!.id, pu.id)" class="px-3 py-1 text-xs bg-btn-bg text-btn-text hover:bg-btn-hover transition-colors">Approve</button>
+                        <button @click="handleReject(myTeam!.id, pu.id)" class="px-3 py-1 text-xs border border-border text-text-secondary hover:text-text-primary transition-colors">Decline</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-sm text-text-tertiary">No pending requests.</div>
+              </div>
+            </template>
+
+            <!-- 成员/Pending 视图 -->
+            <template v-else>
+              <div class="p-6">
+                <h3 class="text-lg font-bold text-text-primary mb-6">My Team</h3>
+
+                <!-- 已加入的团队 -->
+                <div v-if="user?.teamId && myTeam" class="mb-6">
+                  <div class="flex items-center gap-4 mb-3">
+                    <img :src="myTeam.avatar || '/default-team-avatar.svg'" class="w-12 h-12 rounded-[10px] object-cover dark:invert" />
+                    <div>
+                      <p class="font-bold text-text-primary">{{ myTeam.name }}</p>
+                      <p class="text-xs text-emerald-500 mt-0.5">Member</p>
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <div v-for="m in myTeam.members" :key="m.id" class="flex items-center gap-3 p-2 bg-bg-elevated">
+                      <img :src="m.avatar || `https://avatars.githubusercontent.com/${m.githubId}`" class="w-8 h-8 rounded-full object-cover" />
+                      <span class="text-sm text-text-primary">{{ m.name }}</span>
+                      <span v-if="m.id === myTeam.leaderId" class="text-xs text-amber-500">Lead</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pending 申请列表 -->
+                <div v-if="myPendingTeams.length">
+                  <p class="text-xs text-text-muted uppercase tracking-wider mb-3 font-semibold">Pending Applications</p>
+                  <div class="space-y-3">
+                    <div v-for="t in myPendingTeams" :key="t.id" class="flex items-center justify-between gap-3 p-3 bg-bg-elevated border border-amber-600/20">
+                      <div class="flex items-center gap-3">
+                        <img :src="t.avatar || '/default-team-avatar.svg'" class="w-10 h-10 rounded-[8px] object-cover dark:invert" />
+                        <div>
+                          <p class="text-sm font-semibold text-text-primary">{{ t.name }}</p>
+                          <p class="text-xs text-amber-500">Pending Approval</p>
+                        </div>
+                      </div>
+                      <button @click="handleCancelJoin(t.id)" class="text-xs text-text-tertiary hover:text-accent-red transition-colors">Cancel</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="!user?.teamId && !myPendingTeams.length" class="text-sm text-text-tertiary">
+                  You haven't joined or applied to any team yet.
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+  </Teleport>
+
+  <!-- Change Password Modal -->
+  <Teleport to="body">
+    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" leave-active-class="transition duration-150 ease-in" leave-to-class="opacity-0">
+      <div v-if="showChangePasswordModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60" />
+        <div class="relative w-full max-w-sm glass-card p-8 border-amber-500/30">
+          <h3 class="text-lg font-bold text-text-primary mb-2">Change Your Password</h3>
+          <p class="text-sm text-text-secondary mb-6">You're using the default password. Please set a new one to secure your account.</p>
+          <div v-if="changePwError" class="mb-4 p-3 bg-badge-danger-bg border border-accent-red/30 text-badge-danger-text text-sm">{{ changePwError }}</div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs text-text-secondary mb-1">New Password *</label>
+              <input v-model="newPassword" type="password" placeholder="At least 6 characters" class="w-full px-4 py-2.5 bg-input-bg border border-input-border text-text-primary placeholder-input-placeholder focus:border-accent/50 focus:outline-none text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-text-secondary mb-1">Confirm Password *</label>
+              <input v-model="confirmPassword" type="password" placeholder="Repeat new password" class="w-full px-4 py-2.5 bg-input-bg border border-input-border text-text-primary placeholder-input-placeholder focus:border-accent/50 focus:outline-none text-sm" @keyup.enter="handleChangePassword" />
+            </div>
+            <button @click="handleChangePassword" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors">Change Password</button>
+            <button @click="showChangePasswordModal = false" class="w-full py-2 text-xs text-text-tertiary hover:text-text-secondary transition-colors">Skip for now</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- Header Toast -->
+  <Teleport to="body">
+    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 translate-y-2" leave-active-class="transition duration-150 ease-in" leave-to-class="opacity-0 translate-y-2">
+      <div v-if="headerToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] px-5 py-3 text-sm font-medium shadow-lg" :class="headerToast.type === 'error' ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'">
+        {{ headerToast.msg }}
       </div>
     </Transition>
   </Teleport>

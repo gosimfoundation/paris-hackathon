@@ -22,9 +22,9 @@ const tracks = [
 ]
 
 const modelOptions = [
-  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
   { id: 'MiniMax', label: 'MiniMax', icon: assetUrl('/sponsors/minimax.png') },
   { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi.png') },
+  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
 ]
 
 const totalRegistered = computed(() => users.value.length)
@@ -205,7 +205,7 @@ function openUserModal(user: User) {
             <div v-if="getUserTeam(viewingUser)" class="p-4 bg-bg-elevated">
               <p class="text-xs text-text-muted uppercase tracking-wider mb-2 font-semibold">Team</p>
               <div class="flex items-center gap-3">
-                <img :src="assetUrl(getUserTeam(viewingUser)!.avatar) || user.githubId ? 'https://avatars.githubusercontent.com/' + user.githubId.replace(/^@/, '') : assetUrl('/default-avatar.svg')" class="w-8 h-8 rounded-full object-cover border border-border" />
+                <img :src="assetUrl(getUserTeam(viewingUser)!.avatar) || viewingUser.githubId ? 'https://avatars.githubusercontent.com/' + viewingUser.githubId.replace(/^@/, '') : assetUrl('/default-avatar.svg')" class="w-8 h-8 rounded-full object-cover border border-border" />
                 <span class="text-sm font-semibold text-text-primary">{{ getUserTeam(viewingUser)!.name }}</span>
               </div>
             </div>

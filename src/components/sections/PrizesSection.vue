@@ -7,9 +7,9 @@ const { t } = useI18n()
 const upstreamLogo = 'https://avatars.githubusercontent.com/u/238420183?s=200&v=4'
 
 const sponsorAwards = [
-  { key: 'zhipu', color: '#3b82f6', img: assetUrl('/sponsors/zhipu-v2.png') },
   { key: 'minimax', color: '#f43f5e', img: assetUrl('/sponsors/minimax.png') },
   { key: 'moonshot', color: '#a855f7', img: assetUrl('/sponsors/kimi.png') },
+  { key: 'zhipu', color: '#3b82f6', img: assetUrl('/sponsors/zhipu-v2.png') },
 ]
 
 const upstreamAwards = [
@@ -39,12 +39,12 @@ const upstreamAwards = [
             </div>
           </div>
           <h3 class="heading-serif text-xl text-text-primary mb-1">{{ t(`awards.${award.key}`) }}</h3>
-          <p class="text-text-secondary text-sm">{{ t(`awards.${award.key}By`) }}</p>
+          <p v-if="t(`awards.${award.key}By`)" class="text-text-secondary text-sm">{{ t(`awards.${award.key}By`) }}</p>
         </div>
       </div>
 
-      <!-- Upstream awards: second row, centered -->
-      <div class="flex justify-center gap-10 max-w-2xl mx-auto reveal reveal-delay-2">
+      <!-- Upstream awards: second row, centered (hidden for now) -->
+      <div v-if="false" class="flex justify-center gap-10 max-w-2xl mx-auto reveal reveal-delay-2">
         <div v-for="award in upstreamAwards" :key="award.key" class="flex flex-col items-center text-center">
           <div class="medal mb-4" :style="{ '--medal-color': award.color }">
             <div class="medal-ribbon"></div>

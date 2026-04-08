@@ -49,7 +49,7 @@ export default {
   },
   tracks: {
     title: 'Seven Themes',
-    intro: 'Participants will use industry-leading open-source LLMs — including Zhipu GLM, Moonshot Kimi, and MiniMax — to experience their rich and powerful capabilities in text, voice, music, video, presentation generation and more. We hope every participant will feel the beauty and power of open AI, and build stronger confidence in the future.',
+    intro: 'Participants will use industry-leading open-source LLMs — including MiniMax, Moonshot Kimi, and Zhipu GLM — to experience their rich and powerful capabilities in text, voice, music, video, presentation generation and more. We hope every participant will feel the beauty and power of open AI, and build stronger confidence in the future.',
     themes: [
       {
         number: '01',
@@ -112,7 +112,7 @@ export default {
   tech: {
     title: 'Open Source',
     titleAccent: 'AI',
-    desc_prefix: 'Open-source models broaden access to AI and accelerate innovation for everyone. By building on GLM, Kimi, MiniMax and the broader open ecosystem, participants tap into powerful, transparent tools and join a global community that believes ',
+    desc_prefix: 'Open-source models broaden access to AI and accelerate innovation for everyone. By building on MiniMax, Kimi, GLM and the broader open ecosystem, participants tap into powerful, transparent tools and join a global community that believes ',
     desc_bold: 'the best AI is built in the open',
     desc_suffix: '.',
     frameworks: 'Open-Source Frameworks & Tools',
@@ -134,15 +134,15 @@ export default {
   },
   awards: {
     title: 'Awards',
-    subtitle: '5 awards recognizing the best projects across innovation, technical depth, and real-world impact.',
+    subtitle: '3 awards recognizing the best projects across innovation, technical depth, and real-world impact.',
     upstream2: 'Upstream Award II',
     upstream2By: 'Awarded by GOSIM',
-    zhipu: 'Zhipu Award',
-    zhipuBy: '$2,000 · Sponsored by Zhipu AI',
     minimax: 'MiniMax Award',
-    minimaxBy: '$2,000 · Sponsored by MiniMax',
+    minimaxBy: '',
     moonshot: 'Moonshot Award',
-    moonshotBy: 'Token credits · Sponsored by Moonshot AI',
+    moonshotBy: '',
+    zhipu: 'Zhipu Award',
+    zhipuBy: '',
     upstream: 'Upstream Award',
     upstreamBy: 'Awarded by GOSIM',
     allParticipants: 'All teams that complete the hackathon receive',
@@ -254,7 +254,7 @@ export default {
       { q: 'What do I need to submit?', a: 'A working demo, an open-source GitHub repository, and a short slide deck. Each team gets up to 5 minutes to present, followed by 3 minutes of Q&A. Exact timing may be adjusted — check back for updates.' },
       { q: 'Do I have to use a specific AI model?', a: 'You\'re encouraged to use the sponsor-provided models (GLM, MiniMax, Kimi) — all participants get a generous amount of token credits. But you can also use other models or frameworks.' },
       { q: 'Is it free to participate?', a: 'Yes! Registration is free.' },
-      { q: 'How many awards are there?', a: 'There are 5 awards in total — the Zhipu Award, MiniMax Award, Moonshot Award, and two Upstream Awards. Prizes include cash, premium digital products, and LLM token credits.' },
+      { q: 'How many awards are there?', a: 'There are 3 sponsor awards — the MiniMax Award, Moonshot Award, and Zhipu Award. Prizes include cash and LLM token credits.' },
       { q: 'Where is the venue?', a: 'STATION F in Paris — the world\'s largest startup campus. Located at 5 Parvis Alan Turing, 75013 Paris.' },
     ],
   },

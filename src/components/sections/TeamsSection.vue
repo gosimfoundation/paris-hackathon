@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useTeams, type Team } from '../../composables/useTeams'
 import { useAuth, type User } from '../../composables/useAuth'
 import { useI18n } from '../../composables/useI18n'
@@ -15,7 +15,7 @@ function getGitHubAvatar(githubId?: string): string {
 
 
 const {
-  teams, users, totalMembers, totalRegistered, spotsLeft, isFull, progress,
+  teams, users, totalMembers, totalRegistered, spotsLeft, isFull, progress, cancelJoin, kickMember,
   modelStats, loading, error, lastUpdated,
   fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam, approveJoin, rejectJoin
 } = useTeams()
@@ -101,6 +101,7 @@ const showModal = ref(false)
 const modalMode = ref<'create' | 'view' | 'edit'>('create')
 const viewingTeam = ref<Team | null>(null)
 const teamLocked = ref(false)
+const showAdvanced = ref(false)
 
 const teamName = ref('')
 const githubRepo = ref('')
@@ -135,23 +136,37 @@ function getTrackLabel(trackId: string) {
 }
 
 const modelOptions = [
-  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
   { id: 'MiniMax', label: 'MiniMax', icon: assetUrl('/sponsors/minimax.png') },
   { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi.png') },
+  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
 ]
 
 const avatarPresets = [
-  { id: 'glm', label: 'GLM', src: assetUrl('/sponsors/zhipu-v2.png') },
-  { id: 'minimax', label: 'MiniMax', src: assetUrl('/sponsors/minimax.png') },
-  { id: 'kimi', label: 'Kimi', src: assetUrl('/sponsors/kimi.png') },
+  { id: 'MiniMax', label: 'MiniMax', src: assetUrl('/sponsors/minimax.png') },
+  { id: 'Kimi', label: 'Kimi', src: assetUrl('/sponsors/kimi.png') },
+  { id: 'GLM', label: 'GLM', src: assetUrl('/sponsors/zhipu-v2.png') },
 ]
 
+function selectAvatar(preset: { id: string; src: string }) {
+  teamAvatar.value = preset.src
+  selectedModel.value = preset.id
+}
+
 function selectModel(id: string) {
-  selectedModel.value = selectedModel.value === id ? '' : id
+  if (selectedModel.value === id) {
+    selectedModel.value = ''
+  } else {
+    selectedModel.value = id
+    // 没有自定义头图时，跟随模型
+    const isCustom = teamAvatar.value && !avatarPresets.some(p => p.src === teamAvatar.value)
+    if (!isCustom) {
+      teamAvatar.value = avatarPresets.find(p => p.id === id)?.src ?? ''
+    }
+  }
 }
 
 function defaultAvatar(): string {
-  return assetUrl('/default-avatar.svg')
+  return assetUrl('/default-team-avatar.svg')
 }
 
 import { API_BASE, assetUrl } from '../../composables/api'
@@ -178,6 +193,7 @@ function resetForm() {
   teamAvatar.value = ''
   teamLocked.value = false
   maxSize.value = 3
+  showAdvanced.value = false
   error.value = ''
 }
 
@@ -255,6 +271,8 @@ async function handleJoinTeam(teamId: string, e?: Event) {
     if (viewingTeam.value?.id === teamId) {
       viewingTeam.value = teams.value.find(t => t.id === teamId) || null
     }
+  } else {
+    showToast(error.value || 'Failed to send request', 'error')
   }
 }
 
@@ -267,6 +285,18 @@ async function handleApprove(teamId: string, userId: string) {
   if (ok) {
     showToast('Member approved!')
     viewingTeam.value = teams.value.find(t => t.id === teamId) || null
+  }
+}
+
+async function handleCancelJoin(teamId: string) {
+  const ok = await cancelJoin(teamId)
+  if (ok) {
+    showToast('Application cancelled.')
+    if (viewingTeam.value?.id === teamId) {
+      viewingTeam.value = teams.value.find(t => t.id === teamId) || null
+    }
+  } else {
+    showToast(error.value || 'Failed to cancel', 'error')
   }
 }
 
@@ -286,6 +316,13 @@ async function handleLeaveTeam() {
     showModal.value = false
     showToast(`You've left "${name}".`)
   }
+}
+
+async function handleKickMember(teamId: string, userId: string, userName: string) {
+  if (!confirm(`Remove ${userName} from the team?`)) return
+  const ok = await kickMember(teamId, userId)
+  if (ok) showToast(`${userName} removed from team.`)
+  else showToast(error.value || 'Failed to remove member', 'error')
 }
 
 async function handleDeleteTeam() {
@@ -318,7 +355,10 @@ function isTeamLeader(team: Team): boolean {
 }
 
 function userHasTeam(): boolean {
-  return !!user.value?.teamId
+  if (!user.value) return false
+  if (user.value.teamId) return true
+  // 有任何 pending 申请也算"已绑定"，不能再创建/加入其他队
+  return teams.value.some(t => t.pendingJoins?.includes(user.value!.id))
 }
 
 function teamVibe(count: number) {
@@ -333,6 +373,16 @@ function teamVibe(count: number) {
 // }
 
 const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border text-text-primary placeholder-input-placeholder focus:border-accent/50 focus:outline-none transition-colors text-sm'
+
+function handleOpenMyTeam(e: Event) {
+  const teamId = (e as CustomEvent).detail?.teamId
+  if (!teamId) return
+  const team = teams.value.find(t => t.id === teamId)
+  if (team) viewingTeam.value = team
+}
+
+onMounted(() => window.addEventListener('open-my-team', handleOpenMyTeam))
+onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
 </script>
 
 <template>
@@ -400,6 +450,9 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
           <button @click="openCreateModal" :disabled="isFull || userHasTeam()" class="px-8 py-4 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             <img v-if="!isFull && !userHasTeam()" :src="tw.rocket" class="w-4 h-4 inline mr-1" />{{ isFull ? t('teams.closedBtn') : userHasTeam() ? 'Already in a team' : t('teams.registerBtn') }}
           </button>
+          <p v-if="userHasTeam() && !isFull" class="text-xs text-amber-500 mt-2">
+            You already have a team or a pending application. Cancel it first to create or join another.
+          </p>
         </template>
         <template v-else>
           <button @click="promptAuth('register')" class="px-8 py-4 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors">
@@ -433,7 +486,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3 min-w-0">
               <div class="relative">
-                <img :src="assetUrl(team.avatar) || assetUrl('/default-avatar.svg')" class="w-12 h-12 rounded-full shrink-0 object-cover border-2 border-border group-hover:border-accent-blue transition-colors" />
+                <img :src="assetUrl(team.avatar) || assetUrl('/default-team-avatar.svg')" class="w-12 h-12 rounded-full shrink-0 object-cover border-2 border-border group-hover:border-accent-blue transition-colors" :class="!team.avatar ? 'dark:invert' : ''" />
                 <img v-if="team.model && getModelIcon(team.model)" :src="getModelIcon(team.model)" :alt="team.model" class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-bg-card bg-bg-elevated" />
               </div>
               <div class="min-w-0">
@@ -531,10 +584,10 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                     <label class="block text-sm text-text-secondary mb-2">{{ t('teams.teamAvatar') }}</label>
                     <div class="flex items-center gap-3">
                       <div class="w-14 h-14 rounded-[10px] border-2 border-border overflow-hidden shrink-0 flex items-center justify-center bg-bg-card">
-                        <img :src="teamAvatar || defaultAvatar()" class="max-w-[80%] max-h-[80%] object-contain" />
+                        <img :src="teamAvatar || defaultAvatar()" class="w-full h-full object-cover rounded-[24px]" :class="(!teamAvatar) ? 'dark:invert' : ''" />
                       </div>
                       <div class="flex flex-wrap items-center gap-2">
-                        <button v-for="preset in avatarPresets" :key="preset.id" type="button" @click="teamAvatar = preset.src" class="w-10 h-10 rounded-[10px] border-2 overflow-hidden transition-all flex items-center justify-center bg-bg-card p-1" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-border hover:border-border-hover'">
+                        <button v-if="false" v-for="preset in avatarPresets" :key="preset.id" type="button" @click="selectAvatar(preset)" class="w-10 h-10 rounded-[10px] border-2 overflow-hidden transition-all flex items-center justify-center bg-bg-card p-1" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-border hover:border-border-hover'">
                           <img :src="preset.src" class="max-w-full max-h-full object-contain rounded-[10px]" />
                         </button>
                         <label class="w-10 h-10 rounded-[10px] border-2 border-dashed border-border-hover hover:border-border-strong flex items-center justify-center cursor-pointer transition-all overflow-hidden" :class="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar) ? 'border-accent-red' : ''">
@@ -568,7 +621,8 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                   </div>
 
                   <div>
-                    <label class="block text-sm text-text-secondary mb-2">{{ t('teams.aiModels') }}</label>
+                    <label class="block text-sm text-text-secondary mb-1">{{ t('teams.aiModels') }}</label>
+                    <p class="text-xs text-amber-500 mb-2">Your team will receive API tokens from the model provider you select.</p>
                     <div class="flex gap-3">
                       <button v-for="model in modelOptions" :key="model.id" type="button" @click="selectModel(model.id)" class="flex-1 flex items-center justify-center gap-2 py-3 border transition-all" :class="selectedModel === model.id ? 'bg-accent/10 border-accent/50 text-text-primary' : 'border-border text-text-secondary hover:border-border-hover'">
                         <img :src="model.icon" class="w-5 h-5 rounded-[10px]" />
@@ -582,19 +636,6 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                     <textarea v-model="projectIdea" rows="2" placeholder="Briefly describe what you plan to build..." :class="[inputClass, 'resize-none']"></textarea>
                   </div>
 
-                  <!-- Lock toggle -->
-                  <label class="flex items-center gap-3 cursor-pointer">
-                    <div class="relative">
-                      <input type="checkbox" v-model="teamLocked" class="sr-only peer" />
-                      <div class="w-9 h-5 bg-border rounded-full peer-checked:bg-accent transition-colors"></div>
-                      <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-bg-card rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-                    </div>
-                    <div>
-                      <span class="text-sm text-text-primary">{{ t('teams.lockTeam') }}</span>
-                      <p class="text-xs text-text-secondary">{{ t('teams.lockTeamDesc') }}</p>
-                    </div>
-                  </label>
-
                   <!-- Max size -->
                   <div>
                     <label class="block text-sm text-text-secondary mb-1">Max team size</label>
@@ -604,6 +645,27 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                         <span class="text-[10px] font-normal opacity-70">{{ teamVibe(n).label }}</span>
                       </button>
                     </div>
+                  </div>
+
+                  <!-- Advanced options toggle -->
+                  <button type="button" @click="showAdvanced = !showAdvanced" class="flex items-center gap-1 text-xs text-text-tertiary hover:text-text-secondary transition-colors">
+                    <span>{{ showAdvanced ? '▲' : '▼' }}</span>
+                    <span>{{ showAdvanced ? 'Hide advanced options' : 'More options' }}</span>
+                  </button>
+
+                  <div v-if="showAdvanced" class="space-y-5">
+                    <!-- Lock toggle -->
+                    <label class="flex items-center gap-3 cursor-pointer">
+                      <div class="relative">
+                        <input type="checkbox" v-model="teamLocked" class="sr-only peer" />
+                        <div class="w-9 h-5 bg-border rounded-full peer-checked:bg-accent transition-colors"></div>
+                        <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-bg-card rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                      </div>
+                      <div>
+                        <span class="text-sm text-text-primary">{{ t('teams.lockTeam') }}</span>
+                        <p class="text-xs text-text-secondary">{{ t('teams.lockTeamDesc') }}</p>
+                      </div>
+                    </label>
                   </div>
 
                   <button type="submit" :disabled="loading" class="w-full py-4 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
@@ -631,7 +693,7 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                       <img :src="teamAvatar || defaultAvatar()" class="max-w-[80%] max-h-[80%] object-contain" />
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                      <button v-for="preset in avatarPresets" :key="preset.id" type="button" @click="teamAvatar = preset.src" class="w-10 h-10 rounded-[10px] border-2 overflow-hidden transition-all flex items-center justify-center bg-bg-card p-1" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-border hover:border-border-hover'">
+                      <button v-if="false" v-for="preset in avatarPresets" :key="preset.id" type="button" @click="teamAvatar = preset.src" class="w-10 h-10 rounded-[10px] border-2 overflow-hidden transition-all flex items-center justify-center bg-bg-card p-1" :class="teamAvatar === preset.src ? 'border-accent-red scale-110' : 'border-border hover:border-border-hover'">
                         <img :src="preset.src" class="max-w-full max-h-full object-contain rounded-[10px]" />
                       </button>
                       <label class="w-10 h-10 rounded-[10px] border-2 border-dashed border-border-hover hover:border-border-strong flex items-center justify-center cursor-pointer transition-all overflow-hidden" :class="teamAvatar && !avatarPresets.some(p => p.src === teamAvatar) ? 'border-accent-red' : ''">
@@ -679,19 +741,6 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                   <textarea v-model="projectIdea" rows="2" placeholder="Briefly describe what you plan to build..." :class="[inputClass, 'resize-none']"></textarea>
                 </div>
 
-                <!-- Lock toggle -->
-                <label class="flex items-center gap-3 cursor-pointer">
-                  <div class="relative">
-                    <input type="checkbox" v-model="teamLocked" class="sr-only peer" />
-                    <div class="w-9 h-5 bg-border rounded-full peer-checked:bg-accent transition-colors"></div>
-                    <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-bg-card rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-                  </div>
-                  <div>
-                    <span class="text-sm text-text-primary">{{ t('teams.lockTeam') }}</span>
-                    <p class="text-xs text-text-secondary">{{ t('teams.lockTeamDesc') }}</p>
-                  </div>
-                </label>
-
                 <!-- Max size -->
                 <div>
                   <label class="block text-sm text-text-secondary mb-1">Max team size</label>
@@ -701,6 +750,27 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                       <span class="text-[10px] font-normal opacity-70">{{ teamVibe(n).label }}</span>
                     </button>
                   </div>
+                </div>
+
+                <!-- Advanced options toggle -->
+                <button type="button" @click="showAdvanced = !showAdvanced" class="flex items-center gap-1 text-xs text-text-tertiary hover:text-text-secondary transition-colors">
+                  <span>{{ showAdvanced ? '▲' : '▼' }}</span>
+                  <span>{{ showAdvanced ? 'Hide advanced options' : 'More options' }}</span>
+                </button>
+
+                <div v-if="showAdvanced" class="space-y-5">
+                  <!-- Lock toggle -->
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <div class="relative">
+                      <input type="checkbox" v-model="teamLocked" class="sr-only peer" />
+                      <div class="w-9 h-5 bg-border rounded-full peer-checked:bg-accent transition-colors"></div>
+                      <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-bg-card rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                    </div>
+                    <div>
+                      <span class="text-sm text-text-primary">{{ t('teams.lockTeam') }}</span>
+                      <p class="text-xs text-text-secondary">{{ t('teams.lockTeamDesc') }}</p>
+                    </div>
+                  </label>
                 </div>
 
                 <button type="submit" :disabled="loading" class="w-full py-4 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
@@ -759,6 +829,12 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                       <span v-if="member.role" class="text-xs text-text-secondary ml-2">{{ member.role }}</span>
                     </div>
                     <a v-if="member.githubId" :href="'https://github.com/' + member.githubId.replace(/^@/, '')" target="_blank" @click.stop class="text-xs text-text-secondary hover:text-blue-600 transition-colors">@{{ member.githubId.replace(/^@/, '') }}</a>
+                    <button
+                      v-if="isTeamLeader(viewingTeam) && member.id !== user?.id"
+                      @click.stop="handleKickMember(viewingTeam.id, member.id, member.name)"
+                      class="text-xs text-text-tertiary hover:text-accent-red transition-colors ml-2"
+                      title="Remove from team"
+                    >✕</button>
                   </div>
                 </div>
               </div>
@@ -790,11 +866,16 @@ const inputClass = 'w-full px-4 py-2.5 bg-input-bg border border-input-border te
                   {{ loading ? 'Sending...' : 'Request to Join' }}
                 </button>
                 <!-- Already requested -->
+                <div v-else-if="isLoggedIn && hasPendingRequest(viewingTeam)" class="flex-[2] flex gap-2">
+                  <span class="flex-1 py-3 text-center text-sm text-amber-600 border border-amber-600/30">Pending Approval</span>
+                  <button @click="handleCancelJoin(viewingTeam.id)" :disabled="loading" class="px-4 py-3 text-sm border border-border text-text-secondary hover:text-accent-red hover:border-accent-red/50 transition-colors">Cancel</button>
+                </div>
+                <!-- Has team or other pending -->
                 <span
-                  v-else-if="isLoggedIn && hasPendingRequest(viewingTeam)"
-                  class="flex-[2] py-3 text-center text-sm text-amber-600 border border-amber-600/30"
+                  v-else-if="isLoggedIn && userHasTeam() && canJoin(viewingTeam)"
+                  class="flex-[2] py-3 text-center text-xs text-text-muted border border-border"
                 >
-                  Pending Approval
+                  Cancel your current application first
                 </span>
 
                 <!-- Not logged in: register to join -->
