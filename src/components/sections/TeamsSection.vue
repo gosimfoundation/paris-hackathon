@@ -381,6 +381,32 @@ function handleOpenMyTeam(e: Event) {
   if (team) viewingTeam.value = team
 }
 
+function openMyTeamFromButton() {
+  if (!user.value) return
+  // 先找已加入的队伍
+  const joined = teams.value.find(t => t.members?.some(m => m.id === user.value!.id))
+  if (joined) { openViewModal(joined); return }
+  // 再找 pending 的队伍
+  const pending = teams.value.find(t => t.pendingJoins?.includes(user.value!.id))
+  if (pending) { openViewModal(pending); return }
+}
+
+function openMyProfile() {
+  window.dispatchEvent(new CustomEvent('open-profile-modal'))
+}
+
+const viewingUser = ref<ReturnType<typeof getTeamMembers>[0] | null>(null)
+const showUserProfileModal = ref(false)
+
+function openUserProfile(member: ReturnType<typeof getTeamMembers>[0]) {
+  if (user.value && member.id === user.value.id) {
+    openMyProfile()
+  } else {
+    viewingUser.value = member
+    showUserProfileModal.value = true
+  }
+}
+
 onMounted(() => window.addEventListener('open-my-team', handleOpenMyTeam))
 onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
 </script>
@@ -445,14 +471,17 @@ onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
         </div>
       </div>
 
-      <div class="text-center mb-12 reveal">
+      <div class="flex items-center justify-center gap-4 flex-wrap mb-12 reveal">
         <template v-if="isLoggedIn">
-          <button @click="openCreateModal" :disabled="isFull || userHasTeam()" class="px-8 py-4 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            <img v-if="!isFull && !userHasTeam()" :src="tw.rocket" class="w-4 h-4 inline mr-1" />{{ isFull ? t('teams.closedBtn') : userHasTeam() ? 'Already in a team' : t('teams.registerBtn') }}
+          <button v-if="userHasTeam()" @click="openMyTeamFromButton" class="px-8 py-4 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors">
+            MY TEAM
           </button>
-          <p v-if="userHasTeam() && !isFull" class="text-xs text-amber-500 mt-2">
-            You already have a team or a pending application. Cancel it first to create or join another.
-          </p>
+          <button v-else @click="openCreateModal" :disabled="isFull" class="px-8 py-4 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <img v-if="!isFull" :src="tw.rocket" class="w-4 h-4 inline mr-1" />{{ isFull ? t('teams.closedBtn') : t('teams.registerBtn') }}
+          </button>
+          <button @click="openMyProfile" class="px-8 py-4 border border-border text-text-secondary text-sm font-semibold tracking-widest uppercase hover:text-text-primary hover:border-accent transition-colors">
+            VIEW MY PROFILE
+          </button>
         </template>
         <template v-else>
           <button @click="promptAuth('register')" class="px-8 py-4 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors">
@@ -503,7 +532,7 @@ onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
 
           <!-- Member slots grid -->
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-            <div v-for="member in getTeamMembers(team.id)" :key="member.id" class="flex items-center gap-2 px-3 py-2.5 bg-bg-elevated/60 border border-border-subtle rounded-lg">
+            <div v-for="member in getTeamMembers(team.id)" :key="member.id" @click.stop="openUserProfile(member)" class="flex items-center gap-2 px-3 py-2.5 bg-bg-elevated/60 border border-border-subtle rounded-lg cursor-pointer hover:border-accent/40 transition-colors">
               <img :src="assetUrl(member.avatar) || getGitHubAvatar(member.githubId)" class="w-7 h-7 rounded-full shrink-0 object-cover" />
               <div class="min-w-0">
                 <span v-if="member.id === team.leaderId" class="text-[9px] text-amber-500 font-semibold block leading-tight flex items-center gap-0.5"><img :src="tw.crown" class="w-2.5 h-2.5" /> Lead</span>
@@ -940,6 +969,51 @@ onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
                 <p class="text-[11px] text-text-secondary text-center">As team leader, delete the team to leave.</p>
               </div>
             </template>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- User Profile Modal (read-only, for viewing others) -->
+    <Teleport to="body">
+      <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-150" leave-to-class="opacity-0">
+        <div v-if="showUserProfileModal && viewingUser" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="showUserProfileModal = false" />
+          <div class="relative w-full max-w-sm p-8 bg-bg-primary border border-border shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button @click="showUserProfileModal = false" class="absolute top-4 right-4 text-text-secondary hover:text-text-primary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div class="flex flex-col items-center text-center mb-6">
+              <img :src="assetUrl(viewingUser.avatar) || getGitHubAvatar(viewingUser.githubId)" class="w-20 h-20 rounded-full object-cover mb-3 border-2 border-border" />
+              <h3 class="text-lg font-bold text-text-primary">{{ viewingUser.name }}</h3>
+              <p v-if="viewingUser.role" class="text-sm text-text-secondary">{{ viewingUser.role }}</p>
+            </div>
+            <div v-if="viewingUser.bio" class="mb-4">
+              <p class="text-xs text-text-muted uppercase tracking-wider mb-1">Bio</p>
+              <p class="text-sm text-text-secondary">{{ viewingUser.bio }}</p>
+            </div>
+            <div v-if="viewingUser.themes?.length" class="mb-4">
+              <p class="text-xs text-text-muted uppercase tracking-wider mb-2">Themes</p>
+              <div class="flex flex-wrap gap-1">
+                <span v-for="theme in viewingUser.themes" :key="theme" class="px-2 py-0.5 text-xs bg-accent/10 text-accent rounded-full">{{ theme }}</span>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <a v-if="viewingUser.githubId" :href="`https://github.com/${viewingUser.githubId.replace(/^@/, '')}`" target="_blank" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
+                <span class="w-5 text-center">GH</span> {{ viewingUser.githubId }}
+              </a>
+              <p v-if="viewingUser.discord" class="flex items-center gap-2 text-sm text-text-secondary"><span class="w-5 text-center">DC</span> {{ viewingUser.discord }}</p>
+              <a v-if="viewingUser.twitter" :href="`https://x.com/${viewingUser.twitter.replace(/^@/, '')}`" target="_blank" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
+                <span class="w-5 text-center">X</span> {{ viewingUser.twitter }}
+              </a>
+              <p v-if="viewingUser.telegram" class="flex items-center gap-2 text-sm text-text-secondary"><span class="w-5 text-center">TG</span> {{ viewingUser.telegram }}</p>
+              <a v-if="viewingUser.linkedin" :href="viewingUser.linkedin.startsWith('http') ? viewingUser.linkedin : `https://linkedin.com/in/${viewingUser.linkedin}`" target="_blank" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
+                <span class="w-5 text-center">LI</span> {{ viewingUser.linkedin }}
+              </a>
+              <a v-if="viewingUser.website" :href="viewingUser.website" target="_blank" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
+                <span class="w-5 text-center">WEB</span> {{ viewingUser.website }}
+              </a>
+            </div>
           </div>
         </div>
       </Transition>

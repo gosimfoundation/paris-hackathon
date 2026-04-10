@@ -48,10 +48,11 @@ const AUTH_KEY: InjectionKey<{
   logout: () => void
   updateProfile: (data: Partial<User>) => Promise<boolean>
   changePassword: (newPassword: string) => Promise<boolean>
+  sendPasswordReset: (email: string) => Promise<boolean>
   fetchMe: () => Promise<void>
   error: Ref<string>
   showAuthModal: Ref<boolean>
-  authModalTab: Ref<'login' | 'register'>
+  authModalTab: Ref<'login' | 'register' | 'forgot'>
   showChangePasswordModal: Ref<boolean>
   promptAuth: (tab?: 'login' | 'register') => void
 }> = Symbol('auth')
@@ -60,7 +61,7 @@ const user = ref<User | null>(null)
 const isLoggedIn = ref(false)
 const error = ref('')
 const showAuthModal = ref(false)
-const authModalTab = ref<'login' | 'register'>('register')
+const authModalTab = ref<'login' | 'register' | 'forgot'>('register')
 const showChangePasswordModal = ref(false)
 
 function promptAuth(tab: 'login' | 'register' = 'register') {
@@ -122,18 +123,41 @@ export function provideAuth() {
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
-      options: { data: { name: data.name } },
+      options: {
+        data: {
+          name: data.name,
+          github_id: data.githubId,
+          role: data.role,
+          avatar: data.avatar,
+          themes: data.themes,
+          preferred_model: data.preferredModel,
+          bio: data.bio,
+          discord: data.discord,
+          twitter: data.twitter,
+          telegram: data.telegram,
+          linkedin: data.linkedin,
+          website: data.website,
+          looking_for_team: data.lookingForTeam,
+        },
+        emailRedirectTo: 'https://create.gosim.org',
+      },
     })
     if (signUpError) { error.value = signUpError.message; return false }
     if (!authData.user) { error.value = 'Registration failed'; return false }
 
-    // 确保 session 已设置，RLS 才能识别 auth.uid()
+    // 有 session 说明 autoconfirm 开启，直接创建 profile
     if (authData.session) {
       await supabase.auth.setSession(authData.session)
+      await upsertProfile(authData.user.id, data)
+      await fetchMe()
     }
+    // 没 session 说明需要邮件确认，资料已存入 user_metadata，确认后在 SIGNED_IN 事件里创建 profile
+    return true
+  }
 
-    const { error: profileError } = await supabase.from('profiles').upsert({
-      id: authData.user.id,
+  async function upsertProfile(userId: string, data: Partial<RegisterData> & { email?: string }) {
+    return supabase.from('profiles').upsert({
+      id: userId,
       email: data.email,
       name: data.name,
       github_id: data.githubId,
@@ -149,9 +173,6 @@ export function provideAuth() {
       website: data.website,
       looking_for_team: data.lookingForTeam,
     })
-    if (profileError) { error.value = profileError.message; return false }
-    await fetchMe()
-    return true
   }
 
   async function login(email: string, password: string): Promise<boolean> {
@@ -162,6 +183,15 @@ export function provideAuth() {
     if (user.value && !user.value.passwordChanged) {
       showChangePasswordModal.value = true
     }
+    return true
+  }
+
+  async function sendPasswordReset(email: string): Promise<boolean> {
+    error.value = ''
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://create.gosim.org',
+    })
+    if (resetError) { error.value = resetError.message; return false }
     return true
   }
 
@@ -207,18 +237,56 @@ export function provideAuth() {
     return true
   }
 
-  supabase.auth.onAuthStateChange((event) => {
+  let authDebounce: ReturnType<typeof setTimeout> | null = null
+  supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
       user.value = null
       isLoggedIn.value = false
-    } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-      fetchMe()
+      return
+    }
+    if (event === 'PASSWORD_RECOVERY') {
+      showChangePasswordModal.value = true
+      return
+    }
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      // 防抖：多次快速触发只处理最后一次
+      if (authDebounce) clearTimeout(authDebounce)
+      authDebounce = setTimeout(async () => {
+        try {
+          if (session?.user) {
+            const { data: existing } = await supabase.from('profiles').select('id').eq('id', session.user.id).single()
+            if (!existing) {
+              const meta = session.user.user_metadata || {}
+              await upsertProfile(session.user.id, {
+                email: session.user.email,
+                name: meta.name,
+                githubId: meta.github_id,
+                role: meta.role,
+                avatar: meta.avatar,
+                themes: meta.themes,
+                preferredModel: meta.preferred_model,
+                bio: meta.bio,
+                discord: meta.discord,
+                twitter: meta.twitter,
+                telegram: meta.telegram,
+                linkedin: meta.linkedin,
+                website: meta.website,
+                lookingForTeam: meta.looking_for_team,
+              })
+            }
+          }
+          fetchMe()
+        } catch (e) {
+          console.warn('Auth state change handler error:', e)
+          fetchMe()
+        }
+      }, 100)
     }
   })
 
   onMounted(() => fetchMe())
 
-  const ctx = { user, isLoggedIn, register, login, logout, updateProfile, changePassword, fetchMe, error, showAuthModal, authModalTab, showChangePasswordModal, promptAuth }
+  const ctx = { user, isLoggedIn, register, login, logout, updateProfile, changePassword, sendPasswordReset, fetchMe, error, showAuthModal, authModalTab, showChangePasswordModal, promptAuth }
   provide(AUTH_KEY, ctx)
   return ctx
 }

@@ -5,9 +5,10 @@ import { useAuth } from '../../composables/useAuth'
 import { useTheme } from '../../composables/useTheme'
 import { useTeams } from '../../composables/useTeams'
 import { assetUrl } from '../../composables/api'
+import QRCode from 'qrcode'
 
 const { t, locale, toggleLocale } = useI18n()
-const { user, isLoggedIn, login, register, logout, updateProfile, changePassword, error: authError, showAuthModal, authModalTab, showChangePasswordModal } = useAuth()
+const { user, isLoggedIn, login, register, logout, updateProfile, changePassword, sendPasswordReset, error: authError, showAuthModal, authModalTab, showChangePasswordModal } = useAuth()
 const newPassword = ref('')
 const confirmPassword = ref('')
 const changePwError = ref('')
@@ -84,8 +85,9 @@ function scrollTo(href: string) {
   el?.scrollIntoView({ behavior: 'smooth' })
 }
 
-onMounted(() => window.addEventListener('scroll', onScroll))
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+function handleOpenProfileEvent() { openProfileModal() }
+onMounted(() => { window.addEventListener('scroll', onScroll); window.addEventListener('open-profile-modal', handleOpenProfileEvent) })
+onUnmounted(() => { window.removeEventListener('scroll', onScroll); window.removeEventListener('open-profile-modal', handleOpenProfileEvent) })
 
 // Auth modal uses shared state from useAuth (showAuthModal, authModalTab)
 
@@ -164,11 +166,23 @@ watch(showAuthModal, (open) => {
   }
 })
 
+const forgotSent = ref(false)
+const registerNeedsConfirm = ref(false)
+const confirmedEmail = ref('')
+
 async function submitLogin() {
   authLoading.value = true
   const ok = await login(loginEmail.value, loginPassword.value)
   authLoading.value = false
   if (ok) showAuthModal.value = false
+}
+
+async function submitForgot() {
+  authLoading.value = true
+  forgotSent.value = false
+  const ok = await sendPasswordReset(loginEmail.value)
+  authLoading.value = false
+  if (ok) forgotSent.value = true
 }
 
 async function submitRegister() {
@@ -204,10 +218,16 @@ async function submitRegister() {
   }
   authLoading.value = false
   if (ok) {
-    showAuthModal.value = false
-    setTimeout(() => {
-      document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth' })
-    }, 300)
+    if (isLoggedIn.value) {
+      showAuthModal.value = false
+      setTimeout(() => {
+        document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth' })
+      }, 300)
+    } else {
+      // 需要邮件确认
+      confirmedEmail.value = regEmail.value
+      registerNeedsConfirm.value = true
+    }
   }
 }
 
@@ -255,7 +275,9 @@ function goToMyTeam() {
   showMyTeamModal.value = true
 }
 
-function openProfileModal() {
+const profileQr = ref('')
+
+async function openProfileModal() {
   showUserDropdown.value = false
   if (user.value) {
     profileName.value = user.value.name
@@ -270,6 +292,9 @@ function openProfileModal() {
     profileLinkedin.value = user.value.linkedin || ''
     profileWebsite.value = user.value.website || ''
     profileLookingForTeam.value = user.value.lookingForTeam
+    profileQr.value = await QRCode.toDataURL(`https://create.gosim.org/profile/${user.value.id}`, {
+      width: 200, margin: 1, color: { dark: '#000000', light: '#ffffff' },
+    })
   }
   showProfileModal.value = true
 }
@@ -503,11 +528,30 @@ async function saveProfile() {
             <button type="submit" :disabled="authLoading" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
               {{ authLoading ? 'Logging in...' : 'Login' }}
             </button>
+            <p class="text-center text-xs text-text-secondary mt-1">
+              <button type="button" @click="authModalTab = 'forgot'; authError = ''" class="text-accent hover:underline">Forgot password?</button>
+            </p>
             <p class="text-center text-xs text-text-secondary">
               Don't have an account?
               <button type="button" @click="authModalTab = 'register'; authError = ''" class="text-accent hover:underline">Register</button>
             </p>
           </form>
+
+          <!-- Forgot password form -->
+          <div v-else-if="authModalTab === 'forgot'" class="space-y-5">
+            <p class="text-sm text-text-secondary">Enter your email and we'll send you a reset link.</p>
+            <div>
+              <label class="block text-sm text-text-secondary mb-1">Email</label>
+              <input v-model="loginEmail" type="email" required placeholder="your@email.com" :class="inputClass" />
+            </div>
+            <div v-if="forgotSent" class="text-green-400 text-sm text-center">Reset email sent! Check your inbox.</div>
+            <button type="button" :disabled="authLoading" @click="submitForgot" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
+              {{ authLoading ? 'Sending...' : 'Send Reset Link' }}
+            </button>
+            <p class="text-center text-xs text-text-secondary">
+              <button type="button" @click="authModalTab = 'login'; authError = ''" class="text-accent hover:underline">Back to login</button>
+            </p>
+          </div>
 
           <!-- Register form -->
           <form v-else @submit.prevent="submitRegister" class="space-y-5">
@@ -662,13 +706,18 @@ async function saveProfile() {
               </div>
             </div>
 
-            <button type="submit" :disabled="authLoading || (regWantCreateTeam && !regTeamName.trim())" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
-              {{ authLoading ? 'Registering...' : regWantCreateTeam ? 'Register & Create Team' : 'Register' }}
-            </button>
-            <p class="text-center text-xs text-text-secondary">
-              Already have an account?
-              <button type="button" @click="authModalTab = 'login'; authError = ''" class="text-accent hover:underline">Login</button>
-            </p>
+            <div v-if="registerNeedsConfirm" class="p-4 bg-green-900/30 border border-green-500/30 text-green-300 text-sm text-center">
+              A confirmation email has been sent to <strong>{{ confirmedEmail }}</strong>. Please check your inbox and click the link to activate your account.
+            </div>
+            <template v-else>
+              <button type="submit" :disabled="authLoading || (regWantCreateTeam && !regTeamName.trim())" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
+                {{ authLoading ? 'Registering...' : regWantCreateTeam ? 'Register & Create Team' : 'Register' }}
+              </button>
+              <p class="text-center text-xs text-text-secondary">
+                Already have an account?
+                <button type="button" @click="authModalTab = 'login'; authError = ''" class="text-accent hover:underline">Login</button>
+              </p>
+            </template>
           </form>
         </div>
       </div>
@@ -799,6 +848,11 @@ async function saveProfile() {
             <button type="submit" :disabled="profileLoading" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
               {{ profileLoading ? 'Saving...' : 'Save Profile' }}
             </button>
+            <div v-if="user && profileQr" class="flex flex-col items-center pt-4 mt-4 border-t border-border">
+              <p class="text-xs text-text-muted uppercase tracking-wider mb-2">Your Identity QR Code</p>
+              <img :src="profileQr" class="w-28 h-28" />
+              <p class="text-[10px] text-text-muted mt-1">Show this at entrance for check-in</p>
+            </div>
           </form>
         </div>
       </div>
@@ -908,10 +962,10 @@ async function saveProfile() {
   <Teleport to="body">
     <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" leave-active-class="transition duration-150 ease-in" leave-to-class="opacity-0">
       <div v-if="showChangePasswordModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60" />
-        <div class="relative w-full max-w-sm glass-card p-8 border-amber-500/30">
-          <h3 class="text-lg font-bold text-text-primary mb-2">Change Your Password</h3>
-          <p class="text-sm text-text-secondary mb-6">You're using the default password. Please set a new one to secure your account.</p>
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+        <div class="relative w-full max-w-sm p-8 bg-bg-primary border border-border shadow-2xl">
+          <h3 class="text-lg font-bold text-text-primary mb-2">Set a New Password</h3>
+          <p class="text-sm text-text-secondary mb-6">Please enter a new password for your account.</p>
           <div v-if="changePwError" class="mb-4 p-3 bg-badge-danger-bg border border-accent-red/30 text-badge-danger-text text-sm">{{ changePwError }}</div>
           <div class="space-y-4">
             <div>
