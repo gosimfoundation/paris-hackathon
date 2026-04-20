@@ -2,6 +2,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { supabase } from '../lib/supabase'
 import QRCode from 'qrcode'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+
+function userAvatar(p: any): string {
+  if (p.avatar) return p.avatar
+  if (p.github_id) return `https://avatars.githubusercontent.com/${p.github_id.replace(/^@/, '')}`
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name || '?')}&background=333&color=fff&size=64`
+}
 
 const authed = ref(sessionStorage.getItem('admin_authed') === '1')
 const passInput = ref('')
@@ -32,6 +40,8 @@ const teams = ref<any[]>([])
 const loading = ref(false)
 const tab = ref<'users' | 'teams'>('users')
 const search = ref('')
+
+const hoveredDay = ref(-1)
 
 // Edit modal
 const editingUser = ref<any>(null)
@@ -66,11 +76,93 @@ async function loadData() {
 const totalUsers = computed(() => profiles.value.length)
 const totalTeams = computed(() => teams.value.length)
 const checkedIn = computed(() => profiles.value.filter(p => p.checked_in).length)
+const approved = computed(() => profiles.value.filter(p => p.approved).length)
 const noTeam = computed(() => profiles.value.filter(p => !p.team_id).length)
+const inTeam = computed(() => profiles.value.filter(p => p.team_id).length)
+const lookingForTeam = computed(() => profiles.value.filter(p => p.looking_for_team && !p.team_id).length)
+const fullTeams = computed(() => teams.value.filter(t => {
+  const members = profiles.value.filter(p => p.team_id === t.id).length
+  return members >= (t.max_size || 3)
+}).length)
+const openTeams = computed(() => totalTeams.value - fullTeams.value)
 const modelStats = computed(() => {
   const stats: Record<string, number> = { MiniMax: 0, Kimi: 0, GLM: 0 }
   teams.value.forEach(t => { if (t.model && t.model in stats) stats[t.model]++ })
   return stats
+})
+const roleStats = computed(() => {
+  const stats: Record<string, number> = {}
+  profiles.value.forEach(p => { const r = p.role || 'Unset'; stats[r] = (stats[r] || 0) + 1 })
+  return Object.entries(stats).sort((a, b) => b[1] - a[1])
+})
+const recentSignups = computed(() => {
+  const now = Date.now()
+  return profiles.value.filter(p => now - new Date(p.created_at).getTime() < 24 * 60 * 60 * 1000).length
+})
+
+// Field completion rates
+const fieldRates = computed(() => {
+  const total = profiles.value.length || 1
+  const fields = [
+    { label: 'Email', key: 'email' },
+    { label: 'Role', key: 'role' },
+    { label: 'GitHub', key: 'github_id' },
+    { label: 'Bio', key: 'bio' },
+    { label: 'Discord', key: 'discord' },
+    { label: 'Twitter', key: 'twitter' },
+    { label: 'Telegram', key: 'telegram' },
+    { label: 'LinkedIn', key: 'linkedin' },
+  ]
+  return fields.map(f => ({
+    label: f.label,
+    count: profiles.value.filter(p => p[f.key] && p[f.key].trim()).length,
+    pct: Math.round(profiles.value.filter(p => p[f.key] && p[f.key].trim()).length / total * 100),
+  }))
+})
+
+// Daily signups for chart (last 30 days)
+const dailySignups = computed(() => {
+  const days: Record<string, number> = {}
+  profiles.value.forEach(p => {
+    const d = (p.created_at || '').slice(0, 10)
+    if (d) days[d] = (days[d] || 0) + 1
+  })
+  const sorted = Object.entries(days).sort((a, b) => a[0].localeCompare(b[0]))
+  // Cumulative
+  let cum = 0
+  return sorted.map(([date, count]) => ({ date, count, cumulative: cum += count }))
+})
+
+// Chart dimensions: each day gets 50px width, min 400px
+const chartPad = 20
+const chartH = 180
+const chartWidth = computed(() => Math.max(600, dailySignups.value.length * 80 + chartPad * 2))
+
+const chartPoints = computed(() => {
+  const data = dailySignups.value
+  if (data.length < 2) return ''
+  const maxCum = data[data.length - 1].cumulative
+  const w = chartWidth.value
+  return data.map((d, i) => {
+    const x = chartPad + (i / (data.length - 1)) * (w - chartPad * 2)
+    const y = chartH - chartPad - (d.cumulative / maxCum) * (chartH - chartPad * 2)
+    return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`
+  }).join(' ')
+})
+const chartBarData = computed(() => {
+  const data = dailySignups.value
+  if (!data.length) return []
+  const maxCount = Math.max(...data.map(d => d.count), 1)
+  const w = chartWidth.value
+  const barW = Math.max(8, (w - chartPad * 2) / data.length * 0.7)
+  return data.map((d, i) => ({
+    x: chartPad + (i / Math.max(data.length - 1, 1)) * (w - chartPad * 2) - barW / 2,
+    height: (d.count / maxCount) * (chartH - chartPad * 2 - 20),
+    y: chartH - chartPad - 16 - (d.count / maxCount) * (chartH - chartPad * 2 - 20),
+    barW,
+    date: d.date.slice(5),
+    count: d.count,
+  }))
 })
 
 // Filtered users
@@ -112,15 +204,52 @@ async function toggleApproved(user: any) {
   user.approved = newVal
 }
 
-function downloadBackup() {
-  const data = { profiles: profiles.value, teams: teams.value, exported_at: new Date().toISOString() }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+const showExportMenu = ref(false)
+
+function downloadBackup(format: string) {
+  showExportMenu.value = false
+  const date = new Date().toISOString().slice(0, 10)
+  if (format === 'json') {
+    const data = { profiles: profiles.value, teams: teams.value, exported_at: new Date().toISOString() }
+    downloadFile(JSON.stringify(data, null, 2), `hackathon-backup-${date}.json`, 'application/json')
+  } else if (format === 'csv') {
+    const teamMap = Object.fromEntries(teams.value.map((t: any) => [t.id, t]))
+    const header = ['Name','Email','Role','GitHub','Team','Model','Discord','Telegram','Checked In','Approved','Registered']
+    const rows = profiles.value.map((p: any) => {
+      const t = teamMap[p.team_id] || {}
+      return [p.name, p.email||'', p.role||'', p.github_id||'', t.name||'', t.model||'', p.discord||'', p.telegram||'', p.checked_in?'Yes':'No', p.approved?'Yes':'No', (p.created_at||'').slice(0,10)]
+    })
+    const csv = [header, ...rows].map(r => r.map((c: string) => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n')
+    downloadFile(csv, `hackathon-roster-${date}.csv`, 'text/csv')
+  } else if (format === 'pdf') {
+    exportPDF(date)
+  }
+}
+
+function downloadFile(content: string, filename: string, type: string) {
+  const blob = new Blob([content], { type })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = url
-  a.download = `gosim-hackathon-backup-${new Date().toISOString().slice(0, 10)}.json`
-  a.click()
+  a.href = url; a.download = filename; a.click()
   URL.revokeObjectURL(url)
+}
+
+function exportPDF(date: string) {
+  const doc = new jsPDF({ orientation: 'landscape' })
+  doc.setFontSize(16)
+  doc.text('GOSIM Agentic Hackathon 2026 — Participant Roster', 14, 15)
+  doc.setFontSize(9)
+  doc.setTextColor(128)
+  doc.text(`${profiles.value.length} participants · ${teams.value.length} teams · Exported ${date}`, 14, 22)
+
+  const teamMap = Object.fromEntries(teams.value.map((t: any) => [t.id, t]))
+  const head = [['#', 'Name', 'Email', 'Role', 'GitHub', 'Team', 'Model', 'Checked In', 'Approved', 'Registered']]
+  const body = profiles.value.map((p: any, i: number) => {
+    const t = teamMap[p.team_id] || {}
+    return [i+1, p.name||'', p.email||'—', p.role||'—', p.github_id||'—', t.name||'—', t.model||'—', p.checked_in?'Yes':'No', p.approved?'Yes':'No', (p.created_at||'').slice(0,10)]
+  })
+  autoTable(doc, { head, body, startY: 28, styles: { fontSize: 7, cellPadding: 2 }, headStyles: { fillColor: [26, 26, 46] } })
+  doc.save(`hackathon-roster-${date}.pdf`)
 }
 
 function openEdit(user: any) {
@@ -144,19 +273,7 @@ async function saveEdit() {
   editingUser.value = null
 }
 
-async function kickUser(user: any) {
-  if (!confirm(`Remove "${user.name}" from the hackathon? This cannot be undone.`)) return
-  // Remove from team if in one
-  if (user.team_id) {
-    const team = teams.value.find(t => t.id === user.team_id)
-    if (team) {
-      const members = (team.members || []).filter((id: string) => id !== user.id)
-      await supabase.from('teams').update({ members }).eq('id', team.id)
-    }
-  }
-  await supabase.from('profiles').delete().eq('id', user.id)
-  profiles.value = profiles.value.filter(p => p.id !== user.id)
-}
+// kickUser removed — use Supabase Dashboard for deletions
 
 async function dissolveTeam(team: any) {
   if (!confirm(`Dissolve team "${team.name}"? Members will become teamless.`)) return
@@ -191,36 +308,135 @@ onMounted(() => { if (authed.value) loadData() })
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl font-bold text-white">GOSIM Hackathon Admin</h1>
         <div class="flex gap-2">
-          <button @click="downloadBackup" class="px-4 py-2 text-sm bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors">Download Backup</button>
+          <div class="relative">
+            <button @click="showExportMenu = !showExportMenu" class="px-4 py-2 text-sm bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors">Export ▾</button>
+            <div v-if="showExportMenu" class="absolute right-0 top-full mt-1 w-36 bg-gray-800 border border-gray-700 shadow-lg z-10">
+              <button @click="downloadBackup('json')" class="w-full px-4 py-2 text-sm text-left hover:bg-gray-700">JSON</button>
+              <button @click="downloadBackup('csv')" class="w-full px-4 py-2 text-sm text-left hover:bg-gray-700">CSV</button>
+              <button @click="downloadBackup('pdf')" class="w-full px-4 py-2 text-sm text-left hover:bg-gray-700">PDF</button>
+            </div>
+          </div>
           <button @click="loadData" :disabled="loading" class="px-4 py-2 text-sm bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors">
             {{ loading ? 'Loading...' : 'Refresh' }}
           </button>
         </div>
       </div>
 
-      <!-- Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <div class="bg-gray-900 border border-gray-800 p-4 text-center">
-          <p class="text-2xl font-bold text-white">{{ totalUsers }}</p>
+      <!-- Stats Row 1: Key Numbers -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <p class="text-3xl font-bold text-white">{{ totalUsers }}</p>
           <p class="text-xs text-gray-500 uppercase">Registered</p>
+          <p class="text-[10px] text-gray-600 mt-1">+{{ recentSignups }} in last 24h</p>
         </div>
-        <div class="bg-gray-900 border border-gray-800 p-4 text-center">
-          <p class="text-2xl font-bold text-white">{{ totalTeams }}</p>
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <p class="text-3xl font-bold text-white">{{ totalTeams }}</p>
           <p class="text-xs text-gray-500 uppercase">Teams</p>
+          <p class="text-[10px] text-gray-600 mt-1">{{ fullTeams }} full · {{ openTeams }} open</p>
         </div>
-        <div class="bg-gray-900 border border-gray-800 p-4 text-center">
-          <p class="text-2xl font-bold text-green-400">{{ checkedIn }}</p>
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <p class="text-3xl font-bold text-green-400">{{ checkedIn }}</p>
           <p class="text-xs text-gray-500 uppercase">Checked In</p>
+          <p class="text-[10px] text-gray-600 mt-1">{{ totalUsers > 0 ? Math.round(checkedIn / totalUsers * 100) : 0 }}% of registered</p>
         </div>
-        <div class="bg-gray-900 border border-gray-800 p-4 text-center">
-          <p class="text-2xl font-bold text-amber-400">{{ noTeam }}</p>
-          <p class="text-xs text-gray-500 uppercase">No Team</p>
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <p class="text-3xl font-bold text-blue-400">{{ approved }}</p>
+          <p class="text-xs text-gray-500 uppercase">Approved</p>
+          <p class="text-[10px] text-gray-600 mt-1">{{ totalUsers - approved }} pending</p>
         </div>
-        <div class="bg-gray-900 border border-gray-800 p-4 text-center">
-          <div class="flex justify-center gap-3">
-            <span v-for="(count, model) in modelStats" :key="model" class="text-xs"><span class="text-white font-bold">{{ count }}</span> {{ model }}</span>
+      </div>
+
+      <!-- Stats Row 2: Breakdown -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <div class="flex items-baseline gap-3 mb-2">
+            <span class="text-xl font-bold text-white">{{ inTeam }}</span>
+            <span class="text-xs text-gray-500">in teams</span>
+            <span class="text-xl font-bold text-amber-400 ml-auto">{{ noTeam }}</span>
+            <span class="text-xs text-gray-500">no team</span>
           </div>
-          <p class="text-xs text-gray-500 uppercase mt-1">Models</p>
+          <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+            <div class="h-full bg-white rounded-full" :style="{ width: totalUsers > 0 ? `${inTeam / totalUsers * 100}%` : '0%' }"></div>
+          </div>
+          <p class="text-[10px] text-gray-600 mt-1">{{ lookingForTeam }} looking for team</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <p class="text-xs text-gray-500 uppercase mb-2">Models</p>
+          <div class="space-y-1">
+            <div v-for="(count, model) in modelStats" :key="model" class="flex items-center gap-2">
+              <span class="text-xs text-gray-400 w-14">{{ model }}</span>
+              <div class="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-500 rounded-full" :style="{ width: totalTeams > 0 ? `${count / totalTeams * 100}%` : '0%' }"></div>
+              </div>
+              <span class="text-xs text-white font-bold w-6 text-right">{{ count }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <p class="text-xs text-gray-500 uppercase mb-2">Roles</p>
+          <div class="space-y-0.5">
+            <div v-for="[role, count] in roleStats" :key="role" class="flex items-center justify-between">
+              <span class="text-[11px] text-gray-400 truncate">{{ role }}</span>
+              <span class="text-[11px] text-white font-bold ml-2">{{ count }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Row 3: Charts & Completion -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+        <!-- Daily signups chart -->
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <p class="text-xs text-gray-500 uppercase mb-3">Registration Timeline</p>
+          <div class="relative overflow-x-auto" ref="chartScroll">
+            <svg v-if="dailySignups.length" :viewBox="`0 0 ${chartWidth} 200`" :width="chartWidth" height="200" class="block">
+              <!-- Bars (daily count) -->
+              <rect v-for="(d, i) in chartBarData" :key="'bar-'+i"
+                :x="d.x" :y="d.y" :width="d.barW" :height="d.height"
+                :fill="hoveredDay === i ? '#f59e0b' : '#f59e0b'" :opacity="hoveredDay === i ? 0.7 : 0.25" rx="2"
+                class="cursor-pointer transition-opacity duration-150"
+                @mouseenter="hoveredDay = i" @mouseleave="hoveredDay = -1" />
+              <!-- Cumulative line -->
+              <path :d="chartPoints" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+              <!-- Dots -->
+              <circle v-for="(d, i) in dailySignups" :key="'dot-'+i"
+                :cx="chartPad + (i / Math.max(dailySignups.length - 1, 1)) * (chartWidth - chartPad * 2)"
+                :cy="chartH - chartPad - (d.cumulative / dailySignups[dailySignups.length-1].cumulative) * (chartH - chartPad * 2)"
+                :r="hoveredDay === i ? 6 : 3.5" :fill="hoveredDay === i ? '#fff' : '#f59e0b'" :opacity="hoveredDay === i ? 1 : 0.7"
+                :stroke="hoveredDay === i ? '#f59e0b' : 'none'" :stroke-width="hoveredDay === i ? 2 : 0"
+                class="cursor-pointer transition-all duration-150"
+                @mouseenter="hoveredDay = i" @mouseleave="hoveredDay = -1" />
+              <!-- X-axis date labels -->
+              <text v-for="(d, i) in dailySignups" :key="'lbl-'+i"
+                :x="chartPad + (i / Math.max(dailySignups.length - 1, 1)) * (chartWidth - chartPad * 2)"
+                :y="chartH - 2"
+                text-anchor="middle" class="text-[10px]" fill="#555">{{ d.date.slice(5) }}</text>
+            </svg>
+            <!-- Hover tooltip -->
+            <div v-if="hoveredDay >= 0 && hoveredDay < dailySignups.length"
+              class="absolute top-2 bg-gray-800 border border-gray-600 px-3 py-1.5 rounded shadow-lg pointer-events-none z-10"
+              :style="{ left: `${chartPad + (hoveredDay / Math.max(dailySignups.length - 1, 1)) * (chartWidth - chartPad * 2)}px`, transform: 'translateX(-50%)' }">
+              <p class="text-xs text-white font-bold">{{ dailySignups[hoveredDay].date }}</p>
+              <p class="text-[10px] text-amber-400">+{{ dailySignups[hoveredDay].count }} new</p>
+              <p class="text-[10px] text-gray-400">{{ dailySignups[hoveredDay].cumulative }} total</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Field completion rates -->
+        <div class="bg-gray-900 border border-gray-800 p-4">
+          <p class="text-xs text-gray-500 uppercase mb-3">Profile Completion</p>
+          <div class="space-y-2">
+            <div v-for="f in fieldRates" :key="f.label" class="flex items-center gap-2">
+              <span class="text-[11px] text-gray-400 w-16 shrink-0">{{ f.label }}</span>
+              <div class="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500"
+                  :class="f.pct >= 50 ? 'bg-green-500' : f.pct >= 20 ? 'bg-amber-500' : 'bg-red-500'"
+                  :style="{ width: `${f.pct}%` }"></div>
+              </div>
+              <span class="text-[11px] text-gray-400 w-16 text-right">{{ f.count }}/{{ totalUsers }} <span class="text-gray-600">({{ f.pct }}%)</span></span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -259,7 +475,7 @@ onMounted(() => { if (authed.value) loadData() })
               <tr v-for="p in filteredUsers" :key="p.id" class="border-b border-gray-800/50 hover:bg-gray-900/50">
                 <td class="py-3 px-3">
                   <div class="flex items-center gap-2">
-                    <img :src="p.avatar || `https://avatars.githubusercontent.com/${(p.github_id || '').replace(/^@/, '')}`"
+                    <img :src="userAvatar(p)"
                       class="w-7 h-7 rounded-full object-cover" />
                     <span class="text-white">{{ p.name }}</span>
                   </div>
@@ -284,7 +500,6 @@ onMounted(() => { if (authed.value) loadData() })
                   <div class="flex gap-2">
                     <button @click="showQr(p)" class="text-xs text-amber-400 hover:text-amber-300">QR</button>
                     <button @click="openEdit(p)" class="text-xs text-blue-400 hover:text-blue-300">Edit</button>
-                    <button @click="kickUser(p)" class="text-xs text-red-400 hover:text-red-300">Kick</button>
                   </div>
                 </td>
               </tr>
@@ -404,7 +619,7 @@ onMounted(() => { if (authed.value) loadData() })
               <p class="text-xs text-gray-500 uppercase mb-2">Members ({{ getTeamMembers(viewingTeam.id).length }} / {{ viewingTeam.max_size || 3 }})</p>
               <div class="space-y-2">
                 <div v-for="m in getTeamMembers(viewingTeam.id)" :key="m.id" class="flex items-center gap-3 p-2 bg-gray-800 rounded">
-                  <img :src="m.avatar || `https://avatars.githubusercontent.com/${(m.github_id || '').replace(/^@/, '')}`" class="w-8 h-8 rounded-full object-cover" />
+                  <img :src="userAvatar(m)" class="w-8 h-8 rounded-full object-cover" />
                   <div>
                     <p class="text-sm text-white">{{ m.name }} <span v-if="m.id === viewingTeam.leader_id" class="text-amber-400 text-xs">Lead</span></p>
                     <p class="text-xs text-gray-500">{{ m.role || '' }} {{ m.email ? `· ${m.email}` : '' }}</p>

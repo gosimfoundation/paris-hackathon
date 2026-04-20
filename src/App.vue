@@ -4,6 +4,13 @@ import { provideAuth } from './composables/useAuth'
 import { provideTheme } from './composables/useTheme'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppFooter from './components/layout/AppFooter.vue'
+import InteractiveEffects from './components/effects/InteractiveEffects.vue'
+import LiveViewers from './components/effects/LiveViewers.vue'
+import SectionNav from './components/effects/SectionNav.vue'
+import BuildersModal from './components/effects/BuildersModal.vue'
+import InvitationsModal from './components/effects/InvitationsModal.vue'
+import ModelNudgeModal from './components/effects/ModelNudgeModal.vue'
+import NoTeamNudgeModal from './components/effects/NoTeamNudgeModal.vue'
 import RulesPage from './pages/RulesPage.vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -37,6 +44,13 @@ watch(isLoggedIn, async (v) => {
   <RulesPage v-if="currentPath === '/rules'" />
   <router-view v-else />
   <AppFooter />
+  <InteractiveEffects />
+  <LiveViewers />
+  <SectionNav />
+  <BuildersModal />
+  <InvitationsModal />
+  <ModelNudgeModal />
+  <NoTeamNudgeModal />
 
   <!-- Floating QR button (logged in only) -->
   <div v-if="isLoggedIn" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">

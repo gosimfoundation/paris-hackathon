@@ -23,8 +23,8 @@ const tracks = [
 
 const modelOptions = [
   { id: 'MiniMax', label: 'MiniMax', icon: assetUrl('/sponsors/minimax.png') },
-  { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi.png') },
-  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
+  { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi-new-icon.svg') },
+  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-new.svg') },
 ]
 
 const totalRegistered = computed(() => users.value.length)

@@ -108,20 +108,20 @@ onMounted(() => {
 
 
     <!-- Content -->
-    <div class="relative z-10 text-center px-6 max-w-6xl mx-auto pt-20">
+    <div class="relative z-10 text-center px-6 max-w-6xl mx-auto pt-14">
 
       <!-- Eyebrow -->
-      <div class="inline-flex items-center gap-3 mb-10">
+      <div class="inline-flex items-center gap-3 mb-6">
         <div class="h-px w-12 bg-text-primary/30"></div>
         <span class="text-xs text-text-primary/70 font-light tracking-[0.2em] uppercase">{{ t('hero.eyebrow') }}</span>
         <div class="h-px w-12 bg-text-primary/30"></div>
       </div>
 
       <!-- Main title -->
-      <div class="mb-6">
+      <div class="mb-4">
         <div class="shimmer-text text-6xl md:text-8xl lg:text-[10rem] pb-2" style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; line-height: 1.1;">GOSIM</div>
-        <div class="text-text-primary/80 text-[0.65rem] md:text-sm lg:text-base font-light uppercase" style="letter-spacing: 0.45em;">Agentic Hackathon</div>
-        <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-text-primary mt-4">{{ typedLine }}<span v-if="showCursor" class="animate-pulse">|</span></div>
+        <div class="text-text-primary/80 text-[0.65rem] md:text-sm lg:text-base font-light uppercase" style="letter-spacing: 0.45em;"><span class="glitch-hover">Agentic</span> Hackathon</div>
+        <div class="heading-serif text-2xl md:text-4xl lg:text-5xl text-text-primary mt-3">{{ typedLine }}<span v-if="showCursor" class="animate-pulse">|</span></div>
 
         <!-- CTA -->
         <a
@@ -129,7 +129,7 @@ onMounted(() => {
           href="#teams"
           @mousemove="onCtaMouseMove"
           @mouseleave="onCtaMouseLeave"
-          class="hero-cta inline-block mt-8 px-10 py-4 text-white text-sm font-semibold tracking-widest uppercase"
+          class="hero-cta inline-block mt-6 px-10 py-3 text-white text-sm font-semibold tracking-widest uppercase"
           :style="{ transform: ctaTransform || undefined }"
         >
           {{ t('nav.applyNow') }}
@@ -137,14 +137,14 @@ onMounted(() => {
       </div>
 
       <!-- Sponsor line -->
-      <div class="mb-6">
-        <p class="text-sm md:text-lg text-text-primary/80 font-light tracking-wide">
-          Powered by the best open-source models on the planet
+      <div class="mb-4">
+        <p class="text-xs md:text-sm text-text-primary/80 font-light tracking-wide">
+          Powered by the best <span class="glitch-hover">open-source</span> models on the planet
         </p>
-        <div class="flex items-center justify-center gap-6 md:gap-14 mt-6 max-w-sm md:max-w-none mx-auto">
-          <a href="https://www.minimaxi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--minimax"><img src="/sponsors/minimax-wide.webp" alt="MiniMax" class="h-6 md:h-9 w-auto object-contain brightness-0 invert" /></a>
-          <a href="https://www.kimi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--kimi"><img src="/sponsors/kimi-wide.webp" alt="Moonshot AI (Kimi)" class="h-6 md:h-9 w-auto object-contain brightness-0 invert" /></a>
-          <a href="https://z.ai/" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--zhipu"><img src="/sponsors/zhipu-wide.webp" alt="Zhipu AI (GLM)" class="h-8 md:h-[4.75rem] w-auto object-contain brightness-0 invert" /></a>
+        <div class="flex items-center justify-center gap-6 md:gap-12 mt-4 max-w-sm md:max-w-none mx-auto bg-white/10 backdrop-blur-sm rounded-xl px-6 py-4 inline-flex">
+          <a href="https://www.minimaxi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--minimax"><img src="/sponsors/minimax-new-wide.png" alt="MiniMax" class="h-14 md:h-20 w-auto object-contain rounded-lg" /></a>
+          <a href="https://www.kimi.com" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--kimi"><img src="/sponsors/kimi-new-wide.svg" alt="Moonshot AI (Kimi)" class="h-14 md:h-20 w-auto object-contain" /></a>
+          <a href="https://z.ai/" target="_blank" rel="noopener" class="sponsor-logo sponsor-logo--zhipu"><img src="/sponsors/zhipu-new.svg" alt="Zhipu AI (GLM)" class="h-14 md:h-20 w-auto object-contain" /></a>
         </div>
       </div>
 
@@ -154,7 +154,7 @@ onMounted(() => {
       </p> -->
 
       <!-- Divider line -->
-      <div class="flex items-center justify-center gap-6 my-10">
+      <div class="flex items-center justify-center gap-6 my-6">
         <div class="h-px flex-1 max-w-24 bg-text-primary/30"></div>
         <span class="text-xs text-text-primary tracking-[0.25em] uppercase">{{ t('hero.location') }}</span>
         <div class="h-px flex-1 max-w-24 bg-text-primary/30"></div>

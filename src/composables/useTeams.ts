@@ -201,19 +201,24 @@ export function useTeams() {
       const { data: updated, error: updateError } = await supabase.from('teams').update({ pending_joins: pendingJoins }).eq('id', teamId).select('id')
       if (updateError) { error.value = updateError.message; console.error('[joinTeam] error:', updateError); return false }
       if (!updated || updated.length === 0) { error.value = 'Permission denied (RLS)'; console.error('[joinTeam] 0 rows updated — RLS blocked?', { teamId, userId: session.user.id }); return false }
+      const { error: mailErr } = await supabase.functions.invoke('send_team_email', {
+        body: { kind: 'join_request', team_id: teamId, user_id: session.user.id },
+      })
+      if (mailErr) console.warn('[joinTeam] email failed:', mailErr)
       await fetchTeams()
       return true
     } catch (e) { error.value = 'Network error'; console.error('[joinTeam] exception:', e); return false }
     finally { loading.value = false }
   }
 
-  async function leaveTeam(_teamId: string) {
+  async function leaveTeam(teamId: string) {
     loading.value = true
     error.value = ''
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { error.value = 'Not logged in'; loading.value = false; return false }
     try {
-      await supabase.from('profiles').update({ team_id: null }).eq('id', session.user.id)
+      const { error: fnError } = await supabase.rpc('leave_team', { p_team_id: teamId })
+      if (fnError) { error.value = fnError.message; return false }
       await fetchTeams()
       return true
     } catch { error.value = 'Network error'; return false }
@@ -233,6 +238,10 @@ export function useTeams() {
         p_user_id: userId,
       })
       if (fnError) { error.value = fnError.message; return false }
+      const { error: mailErr } = await supabase.functions.invoke('send_team_email', {
+        body: { kind: 'join_approved', team_id: teamId, user_id: userId },
+      })
+      if (mailErr) console.warn('[approveJoin] email failed:', mailErr)
       await fetchTeams()
       return true
     } catch { error.value = 'Network error'; return false }
@@ -249,6 +258,10 @@ export function useTeams() {
       const { data: updated, error: updateError } = await supabase.from('teams').update({ pending_joins: pendingJoins }).eq('id', teamId).select('id')
       if (updateError) { error.value = updateError.message; return false }
       if (!updated || updated.length === 0) { error.value = 'Permission denied (RLS)'; return false }
+      const { error: mailErr } = await supabase.functions.invoke('send_team_email', {
+        body: { kind: 'join_rejected', team_id: teamId, user_id: userId },
+      })
+      if (mailErr) console.warn('[rejectJoin] email failed:', mailErr)
       await fetchTeams()
       return true
     } catch { error.value = 'Network error'; return false }
@@ -270,6 +283,67 @@ export function useTeams() {
     finally { loading.value = false }
   }
 
+  async function inviteToTeam(teamId: string, userId: string, message: string = '') {
+    loading.value = true
+    error.value = ''
+    try {
+      const { data: inviteId, error: fnError } = await supabase.rpc('invite_to_team', {
+        p_team_id: teamId, p_user_id: userId, p_message: message || null,
+      })
+      if (fnError) { error.value = fnError.message; return null }
+      const { error: mailErr } = await supabase.functions.invoke('send_team_email', {
+        body: { kind: 'invite', invite_id: inviteId },
+      })
+      if (mailErr) console.warn('[inviteToTeam] email failed:', mailErr)
+      await fetchInvitations()
+      return inviteId
+    } catch (e) { error.value = 'Network error'; console.error('[inviteToTeam]', e); return null }
+    finally { loading.value = false }
+  }
+
+  async function respondToInvite(inviteId: string, accept: boolean) {
+    loading.value = true
+    error.value = ''
+    try {
+      const { error: fnError } = await supabase.rpc('respond_to_invite', { p_invite_id: inviteId, p_accept: accept })
+      if (fnError) { error.value = fnError.message; return false }
+      const { error: mailErr } = await supabase.functions.invoke('send_team_email', {
+        body: { kind: accept ? 'accepted' : 'declined', invite_id: inviteId },
+      })
+      if (mailErr) console.warn('[respondToInvite] email failed:', mailErr)
+      await Promise.all([fetchTeams(), fetchInvitations()])
+      return true
+    } catch (e) { error.value = 'Network error'; console.error('[respondToInvite]', e); return false }
+    finally { loading.value = false }
+  }
+
+  async function cancelInvite(inviteId: string) {
+    loading.value = true
+    error.value = ''
+    try {
+      const { error: fnError } = await supabase.rpc('cancel_invite', { p_invite_id: inviteId })
+      if (fnError) { error.value = fnError.message; return false }
+      await fetchInvitations()
+      return true
+    } catch { error.value = 'Network error'; return false }
+    finally { loading.value = false }
+  }
+
+  const myInvitations = ref<any[]>([])
+  const sentInvitations = ref<any[]>([])
+
+  async function fetchInvitations() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { myInvitations.value = []; sentInvitations.value = []; return }
+    const { data } = await supabase
+      .from('team_invitations')
+      .select('id, team_id, invited_user_id, invited_by, message, status, created_at')
+      .eq('status', 'pending')
+    const all = data || []
+    myInvitations.value = all.filter(i => i.invited_user_id === session.user.id)
+    sentInvitations.value = all.filter(i => i.invited_by === session.user.id)
+  }
+
   async function likeTeam(teamId: string) {
     const team = teams.value.find(t => t.id === teamId)
     if (!team) return false
@@ -281,19 +355,22 @@ export function useTeams() {
 
   onMounted(() => {
     fetchTeams()
+    fetchInvitations()
     if (!realtimeSetup) {
       realtimeSetup = true
       supabase
         .channel('teams-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, fetchTeams)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchTeams)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_invitations' }, fetchInvitations)
         .subscribe()
     }
   })
 
   return {
     teams, users, totalMembers, totalRegistered, maxParticipants, spotsLeft, isFull, progress,
-    modelStats, loading, error, lastUpdated,
+    modelStats, loading, error, lastUpdated, myInvitations, sentInvitations,
     fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, cancelJoin, leaveTeam, likeTeam, approveJoin, rejectJoin, kickMember,
+    inviteToTeam, respondToInvite, cancelInvite, fetchInvitations,
   }
 }

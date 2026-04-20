@@ -68,10 +68,10 @@ const mobileOpen = ref(false)
 const navItems = computed(() => [
   { label: t('nav.about'), href: '#about' },
   { label: t('nav.themes'), href: '#themes' },
-  { label: t('nav.schedule'), href: '#schedule' },
   { label: t('nav.awards'), href: '#awards' },
-  { label: t('nav.judging'), href: '#judging' },
   { label: t('nav.teams'), href: '#teams' },
+  { label: t('nav.schedule'), href: '#schedule' },
+  { label: t('nav.judging'), href: '#judging' },
   { label: t('nav.faq'), href: '#faq' },
 ])
 
@@ -381,8 +381,11 @@ async function saveProfile() {
         <!-- User area -->
         <template v-if="isLoggedIn && user">
           <div class="relative">
-            <button @click="showUserDropdown = !showUserDropdown" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
-              <img :src="assetUrl(user.avatar) || (user.githubId ? `https://avatars.githubusercontent.com/${user.githubId.replace('@', '')}` : '/default-avatar.svg')" class="w-7 h-7 rounded-full object-cover border border-border" />
+            <button @click="showUserDropdown = !showUserDropdown" class="relative flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
+              <span class="relative">
+                <img :src="assetUrl(user.avatar) || (user.githubId ? `https://avatars.githubusercontent.com/${user.githubId.replace('@', '')}` : '/default-avatar.svg')" class="w-7 h-7 rounded-full object-cover border border-border" />
+                <span v-if="pendingCount > 0" class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-accent-red text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none border-2 border-bg-primary">{{ pendingCount }}</span>
+              </span>
               <span class="max-w-[80px] truncate">{{ user.name }}</span>
             </button>
             <Transition
@@ -710,7 +713,10 @@ async function saveProfile() {
               A confirmation email has been sent to <strong>{{ confirmedEmail }}</strong>. Please check your inbox and click the link to activate your account.
             </div>
             <template v-else>
-              <button type="submit" :disabled="authLoading || (regWantCreateTeam && !regTeamName.trim())" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
+              <p v-if="!regLookingForTeam && !regWantCreateTeam" class="text-xs text-amber-400 text-center -mt-2">
+                Please choose at least one: <strong>Looking for a team</strong> or <strong>Create a team now</strong>.
+              </p>
+              <button type="submit" :disabled="authLoading || (regWantCreateTeam && !regTeamName.trim()) || (!regLookingForTeam && !regWantCreateTeam)" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
                 {{ authLoading ? 'Registering...' : regWantCreateTeam ? 'Register & Create Team' : 'Register' }}
               </button>
               <p class="text-center text-xs text-text-secondary">

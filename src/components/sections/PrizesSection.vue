@@ -10,8 +10,8 @@ const gold = '#D4A017'
 
 const sponsorAwards = [
   { key: 'minimax', color: gold, img: assetUrl('/sponsors/minimax.png') },
-  { key: 'moonshot', color: gold, img: assetUrl('/sponsors/kimi.png') },
-  { key: 'zhipu', color: gold, img: assetUrl('/sponsors/zhipu-v2.png') },
+  { key: 'moonshot', color: gold, img: assetUrl('/sponsors/kimi-new-icon.svg') },
+  { key: 'zhipu', color: gold, img: assetUrl('/sponsors/zhipu-new.svg') },
 ]
 
 const upstreamAwards = [

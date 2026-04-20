@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useCountUp } from '../../composables/useCountUp'
 import { useTeams, type Team } from '../../composables/useTeams'
 import { useAuth, type User } from '../../composables/useAuth'
 import { useI18n } from '../../composables/useI18n'
@@ -17,8 +18,14 @@ function getGitHubAvatar(githubId?: string): string {
 const {
   teams, users, totalMembers, totalRegistered, spotsLeft, isFull, progress, cancelJoin, kickMember,
   modelStats, loading, error, lastUpdated,
-  fetchTeams, createTeam, editTeam, deleteTeam, joinTeam, leaveTeam, likeTeam, approveJoin, rejectJoin
+  fetchTeams, createTeam, editTeam, joinTeam, leaveTeam, likeTeam, approveJoin, rejectJoin
 } = useTeams()
+
+// Animated counters
+const teamsCount = useCountUp(computed(() => teams.value.length))
+const membersCount = useCountUp(totalMembers)
+const registeredCount = useCountUp(totalRegistered)
+const spotsCount = useCountUp(spotsLeft)
 
 // Like tracking (localStorage)
 const likedTeams = ref<Set<string>>(new Set(JSON.parse(localStorage.getItem('likedTeams') || '[]')))
@@ -80,6 +87,42 @@ function timeAgo(date: Date | null) {
   return `${Math.floor(secs / 60)}m ago`
 }
 
+function timeAgoFromString(iso: string) {
+  const d = new Date(iso)
+  const secs = Math.floor((Date.now() - d.getTime()) / 1000)
+  if (secs < 60) return 'just now'
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`
+  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`
+  return `${Math.floor(secs / 86400)}d ago`
+}
+
+// Recent activity for ticker: newest user + newest team
+const recentActivity = computed(() => {
+  const events: { text: string; time: string }[] = []
+  const recentUsers = [...users.value].sort((a, b) =>
+    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  ).slice(0, 3)
+  for (const u of recentUsers) {
+    if (u.createdAt) events.push({ text: `${u.name} just joined`, time: timeAgoFromString(u.createdAt) })
+  }
+  const recentTeams = [...teams.value].sort((a: any, b: any) =>
+    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  ).slice(0, 2)
+  for (const t of recentTeams as any[]) {
+    if (t.createdAt) events.push({ text: `Team "${t.name}" formed`, time: timeAgoFromString(t.createdAt) })
+  }
+  return events.sort((a, b) => a.time.localeCompare(b.time))
+})
+
+const tickerIndex = ref(0)
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    if (recentActivity.value.length > 0) {
+      tickerIndex.value = (tickerIndex.value + 1) % recentActivity.value.length
+    }
+  }, 4000)
+}
+
 // Twemoji CDN helper
 const twemoji = (code: string) => `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${code}.svg`
 const tw = {
@@ -137,14 +180,14 @@ function getTrackLabel(trackId: string) {
 
 const modelOptions = [
   { id: 'MiniMax', label: 'MiniMax', icon: assetUrl('/sponsors/minimax.png') },
-  { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi.png') },
-  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-v2.png') },
+  { id: 'Kimi', label: 'Kimi', icon: assetUrl('/sponsors/kimi-new-icon.svg') },
+  { id: 'GLM', label: 'GLM', icon: assetUrl('/sponsors/zhipu-new.svg') },
 ]
 
 const avatarPresets = [
   { id: 'MiniMax', label: 'MiniMax', src: assetUrl('/sponsors/minimax.png') },
-  { id: 'Kimi', label: 'Kimi', src: assetUrl('/sponsors/kimi.png') },
-  { id: 'GLM', label: 'GLM', src: assetUrl('/sponsors/zhipu-v2.png') },
+  { id: 'Kimi', label: 'Kimi', src: assetUrl('/sponsors/kimi-new-icon.svg') },
+  { id: 'GLM', label: 'GLM', src: assetUrl('/sponsors/zhipu-new.svg') },
 ]
 
 function selectAvatar(preset: { id: string; src: string }) {
@@ -327,16 +370,23 @@ async function handleKickMember(teamId: string, userId: string, userName: string
 
 async function handleDeleteTeam() {
   if (!viewingTeam.value) return
-  if (!confirm(`Delete team "${viewingTeam.value.name}"? This cannot be undone.`)) return
-  const ok = await deleteTeam(viewingTeam.value.id)
+  if (!confirm(`Disband team "${viewingTeam.value.name}"? All members will be removed and this cannot be undone.`)) return
+  const ok = await leaveTeam(viewingTeam.value.id)
   if (ok) {
     showModal.value = false
-    showToast(`Team deleted.`)
+    showToast(`Team disbanded.`)
   }
 }
 
 function getModelIcon(model: string) {
   return modelOptions.find((o) => o.id === model)?.icon
+}
+
+function getModelColor(model: string | undefined | null): string {
+  if (model === 'MiniMax') return '#E94B7E'
+  if (model === 'Kimi') return '#3B82F6'
+  if (model === 'GLM') return '#22C55E'
+  return '#6B7280'
 }
 
 function canJoin(team: Team) {
@@ -444,6 +494,20 @@ onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
             {{ t('teams.refresh') }}
           </button>
         </div>
+
+        <!-- Activity ticker -->
+        <div v-if="recentActivity.length" class="flex items-center justify-center gap-2 mt-4 text-xs">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          <span class="text-green-500 font-semibold tracking-wider uppercase text-[10px]">Live</span>
+          <Transition mode="out-in" enter-active-class="transition duration-300" enter-from-class="opacity-0 translate-y-1" leave-active-class="transition duration-200" leave-to-class="opacity-0 -translate-y-1">
+            <span :key="tickerIndex" class="text-text-secondary">
+              {{ recentActivity[tickerIndex]?.text }} · <span class="text-text-muted">{{ recentActivity[tickerIndex]?.time }}</span>
+            </span>
+          </Transition>
+        </div>
       </div>
 
       <!-- Stats bar -->
@@ -451,13 +515,13 @@ onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
         <div class="flex justify-between text-sm mb-3">
           <span class="text-text-secondary inline-flex items-center gap-1">
             <img :src="tw.fire" class="w-4 h-4" />
-            <span class="text-text-primary font-bold">{{ teams.length }}</span> {{ t('teams.teams') }} ·
-            <span class="text-text-primary font-bold">{{ totalMembers }}</span> in teams ·
-            <span class="text-text-primary font-bold">{{ totalRegistered }}</span> registered
+            <span class="text-text-primary font-bold tabular-nums">{{ teamsCount }}</span> {{ t('teams.teams') }} ·
+            <span class="text-text-primary font-bold tabular-nums">{{ membersCount }}</span> in teams ·
+            <span class="text-text-primary font-bold tabular-nums">{{ registeredCount }}</span> registered
           </span>
           <span class="text-text-secondary inline-flex items-center gap-1">
             <img :src="tw.star" class="w-4 h-4" />
-            <span class="text-amber-600 font-bold">{{ spotsLeft }}</span> {{ t('teams.spotsLeft') }}
+            <span class="text-amber-600 font-bold tabular-nums">{{ spotsCount }}</span> {{ t('teams.spotsLeft') }}
           </span>
         </div>
         <div class="w-full h-1.5 bg-bg-elevated overflow-hidden rounded-full">
@@ -508,9 +572,13 @@ onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
           @mouseenter="hoveredTeam = team.id"
           @mouseleave="hoveredTeam = null; onCardMouseLeave($event.currentTarget as HTMLElement)"
           @mousemove="onCardMouseMove($event, $event.currentTarget as HTMLElement)"
-          class="team-card glass-card-glow p-6 transition-all group relative cursor-pointer flex flex-col"
-          style="transition: transform 0.15s ease-out;"
+          class="team-card p-6 pt-7 transition-all group relative cursor-pointer flex flex-col border-2 border-gray-600/50 rounded-sm team-card-breathe overflow-hidden"
+          :style="hoveredTeam === team.id
+            ? `background: rgba(28, 31, 43, 0.4); backdrop-filter: blur(12px); border-color: ${getModelColor(team.model)}; box-shadow: 0 0 24px ${getModelColor(team.model)}33, 0 0 48px ${getModelColor(team.model)}1a; animation: none;`
+            : 'background: rgba(28, 31, 43, 0.4); backdrop-filter: blur(12px);'"
         >
+          <!-- Model-colored top strip -->
+          <div class="absolute top-0 left-0 right-0 h-1" :style="{ background: getModelColor(team.model) }"></div>
           <!-- Header -->
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3 min-w-0">
@@ -1000,18 +1068,28 @@ onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
             </div>
             <div class="space-y-2">
               <a v-if="viewingUser.githubId" :href="`https://github.com/${viewingUser.githubId.replace(/^@/, '')}`" target="_blank" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
-                <span class="w-5 text-center">GH</span> {{ viewingUser.githubId }}
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                <span class="truncate">{{ viewingUser.githubId }}</span>
               </a>
-              <p v-if="viewingUser.discord" class="flex items-center gap-2 text-sm text-text-secondary"><span class="w-5 text-center">DC</span> {{ viewingUser.discord }}</p>
+              <p v-if="viewingUser.discord" class="flex items-center gap-2 text-sm text-text-secondary">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                <span class="truncate">{{ viewingUser.discord }}</span>
+              </p>
               <a v-if="viewingUser.twitter" :href="`https://x.com/${viewingUser.twitter.replace(/^@/, '')}`" target="_blank" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
-                <span class="w-5 text-center">X</span> {{ viewingUser.twitter }}
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                <span class="truncate">{{ viewingUser.twitter }}</span>
               </a>
-              <p v-if="viewingUser.telegram" class="flex items-center gap-2 text-sm text-text-secondary"><span class="w-5 text-center">TG</span> {{ viewingUser.telegram }}</p>
+              <p v-if="viewingUser.telegram" class="flex items-center gap-2 text-sm text-text-secondary">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                <span class="truncate">{{ viewingUser.telegram }}</span>
+              </p>
               <a v-if="viewingUser.linkedin" :href="viewingUser.linkedin.startsWith('http') ? viewingUser.linkedin : `https://linkedin.com/in/${viewingUser.linkedin}`" target="_blank" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
-                <span class="w-5 text-center">LI</span> {{ viewingUser.linkedin }}
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                <span class="truncate">{{ viewingUser.linkedin }}</span>
               </a>
               <a v-if="viewingUser.website" :href="viewingUser.website" target="_blank" class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors">
-                <span class="w-5 text-center">WEB</span> {{ viewingUser.website }}
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                <span class="truncate">{{ viewingUser.website }}</span>
               </a>
             </div>
           </div>
@@ -1020,3 +1098,23 @@ onUnmounted(() => window.removeEventListener('open-my-team', handleOpenMyTeam))
     </Teleport>
   </section>
 </template>
+
+<style scoped>
+.team-card-breathe {
+  animation: card-breathe 4s ease-in-out infinite;
+  transition: transform 0.15s ease-out, border-color 0.3s, box-shadow 0.3s;
+}
+.team-card-breathe:nth-child(2n) { animation-delay: -1s; }
+.team-card-breathe:nth-child(3n) { animation-delay: -2s; }
+.team-card-breathe:nth-child(4n) { animation-delay: -3s; }
+@keyframes card-breathe {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.04);
+    border-color: rgba(107, 114, 128, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(212,160,23,0.08), inset 0 1px 0 rgba(255,255,255,0.08);
+    border-color: rgba(212, 160, 23, 0.25);
+  }
+}
+</style>

@@ -145,6 +145,12 @@ export function provideAuth() {
     if (signUpError) { error.value = signUpError.message; return false }
     if (!authData.user) { error.value = 'Registration failed'; return false }
 
+    // Supabase 的"安全"行为：邮箱已注册时返回 user 但 identities 为空，不发邮件
+    if (Array.isArray(authData.user.identities) && authData.user.identities.length === 0) {
+      error.value = 'This email is already registered. Please login instead, or use Forgot Password if you lost access.'
+      return false
+    }
+
     // 有 session 说明 autoconfirm 开启，直接创建 profile
     if (authData.session) {
       await supabase.auth.setSession(authData.session)
