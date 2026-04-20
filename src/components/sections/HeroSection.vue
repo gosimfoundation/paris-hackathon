@@ -100,21 +100,23 @@ onMounted(() => {
       ><source src="/photos/hero-bg.mp4" type="video/mp4" /></video>
     </div>
 
-    <!-- Red-blue gradient overlay -->
+    <!-- Aurore parisienne gradient overlay -->
     <div
-      class="absolute inset-0 opacity-20 animate-gradient-shift"
-      style="background: linear-gradient(-45deg, #dc2626, #991b1b, #1e3a8a, #2563eb, #dc2626); background-size: 400% 400%;"
+      class="absolute inset-0 opacity-25 animate-gradient-shift"
+      style="background: linear-gradient(-45deg, #6366f1, #8b1e3f, #ec4899, #d4af37, #6366f1); background-size: 400% 400%;"
     ></div>
+    <!-- Ink vignette -->
+    <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at center, transparent 0%, rgba(10,10,15,0.6) 100%);"></div>
 
 
     <!-- Content -->
     <div class="relative z-10 text-center px-6 max-w-6xl mx-auto pt-20">
 
-      <!-- Eyebrow -->
-      <div class="inline-flex items-center gap-3 mb-10">
-        <div class="h-px w-12 bg-text-primary/30"></div>
-        <span class="text-xs text-text-primary/70 font-light tracking-[0.2em] uppercase">{{ t('hero.eyebrow') }}</span>
-        <div class="h-px w-12 bg-text-primary/30"></div>
+      <!-- Eyebrow — French edition -->
+      <div class="inline-flex items-center gap-4 mb-10">
+        <div class="h-px w-16 bg-text-primary/40"></div>
+        <span class="french-numero text-text-primary/80">N° I &nbsp;·&nbsp; Édition MMXXVI</span>
+        <div class="h-px w-16 bg-text-primary/40"></div>
       </div>
 
       <!-- Main title -->
@@ -153,11 +155,14 @@ onMounted(() => {
         {{ t('hero.tagline') }}
       </p> -->
 
-      <!-- Divider line -->
-      <div class="flex items-center justify-center gap-6 my-10">
-        <div class="h-px flex-1 max-w-24 bg-text-primary/30"></div>
-        <span class="text-xs text-text-primary tracking-[0.25em] uppercase">{{ t('hero.location') }}</span>
-        <div class="h-px flex-1 max-w-24 bg-text-primary/30"></div>
+      <!-- Divider line — French date + venue -->
+      <div class="flex flex-col items-center justify-center gap-3 my-10">
+        <div class="flex items-center justify-center gap-6 w-full">
+          <div class="h-px flex-1 max-w-24 bg-text-primary/30"></div>
+          <span class="french-label text-base md:text-lg text-text-primary">V — VI&nbsp;&nbsp;Mai&nbsp;&nbsp;MMXXVI</span>
+          <div class="h-px flex-1 max-w-24 bg-text-primary/30"></div>
+        </div>
+        <span class="text-[11px] text-text-primary/70 tracking-[0.35em] uppercase">Station F &nbsp;·&nbsp; Paris</span>
       </div>
 
       <!-- LIVE indicator -->

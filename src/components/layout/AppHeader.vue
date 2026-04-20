@@ -710,7 +710,10 @@ async function saveProfile() {
               A confirmation email has been sent to <strong>{{ confirmedEmail }}</strong>. Please check your inbox and click the link to activate your account.
             </div>
             <template v-else>
-              <button type="submit" :disabled="authLoading || (regWantCreateTeam && !regTeamName.trim())" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
+              <p v-if="!regLookingForTeam && !regWantCreateTeam" class="text-xs text-amber-400 text-center -mt-2">
+                Please choose at least one: <strong>Looking for a team</strong> or <strong>Create a team now</strong>.
+              </p>
+              <button type="submit" :disabled="authLoading || (regWantCreateTeam && !regTeamName.trim()) || (!regLookingForTeam && !regWantCreateTeam)" class="w-full py-3 bg-btn-bg text-btn-text text-sm font-semibold tracking-widest uppercase hover:bg-btn-hover transition-colors disabled:opacity-50">
                 {{ authLoading ? 'Registering...' : regWantCreateTeam ? 'Register & Create Team' : 'Register' }}
               </button>
               <p class="text-center text-xs text-text-secondary">
