@@ -7,8 +7,7 @@ import { supabase } from '../../lib/supabase'
 const { user, isLoggedIn } = useAuth()
 const { teams, myInvitations } = useTeams()
 
-const DISMISS_KEY = 'noteam_nudge_dismissed_session'
-const dismissed = ref(sessionStorage.getItem(DISMISS_KEY) === '1')
+const dismissed = ref(false)
 const toggling = ref(false)
 const toggledOn = ref(false)
 
@@ -23,7 +22,7 @@ const shouldShow = computed(() =>
 )
 
 watch(() => user.value?.id, () => {
-  dismissed.value = sessionStorage.getItem(DISMISS_KEY) === '1'
+  dismissed.value = false
   toggledOn.value = !!user.value?.lookingForTeam
 })
 
@@ -44,7 +43,6 @@ async function enableLookingForTeam() {
 }
 
 function dismiss() {
-  sessionStorage.setItem(DISMISS_KEY, '1')
   dismissed.value = true
 }
 

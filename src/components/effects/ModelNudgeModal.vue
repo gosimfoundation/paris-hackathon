@@ -6,8 +6,7 @@ import { useTeams } from '../../composables/useTeams'
 const { user, isLoggedIn } = useAuth()
 const { teams, editTeam } = useTeams()
 
-const DISMISS_KEY = 'model_nudge_dismissed_session'
-const dismissed = ref(sessionStorage.getItem(DISMISS_KEY) === '1')
+const dismissed = ref(false)
 const saving = ref(false)
 const justSaved = ref(false)
 
@@ -31,13 +30,11 @@ async function pick(model: string) {
 }
 
 function dismiss() {
-  sessionStorage.setItem(DISMISS_KEY, '1')
   dismissed.value = true
 }
 
-// Reset session dismiss when user changes
 watch(() => user.value?.id, () => {
-  dismissed.value = sessionStorage.getItem(DISMISS_KEY) === '1'
+  dismissed.value = false
 })
 </script>
 
