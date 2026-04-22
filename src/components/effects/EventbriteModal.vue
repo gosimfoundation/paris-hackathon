@@ -19,11 +19,11 @@ const show = ref(true)
             <div class="inline-block px-3 py-1 bg-accent-red/20 text-red-400 text-[10px] font-bold tracking-widest uppercase rounded mb-3">Required for entry</div>
             <h2 class="text-xl font-bold text-text-primary mb-2">Register on Eventbrite</h2>
             <p class="text-sm text-text-secondary leading-relaxed">
-              You also need a <strong class="text-text-primary">free Eventbrite ticket</strong> to enter STATION F on event day. Our discount code is already applied.
+              You also need a <strong class="text-text-primary">free Eventbrite ticket</strong> to enter STATION F on event day.
             </p>
           </div>
 
-          <p class="text-xs text-red-400/80 text-center mb-4">Without this ticket, venue security won't let you in.</p>
+          <p class="text-xs text-red-400/80 text-center mb-4">An Eventbrite ticket is required for entry at STATION F.</p>
 
           <a :href="EB_URL" target="_blank" rel="noopener"
             class="block w-full py-3 bg-btn-bg text-btn-text text-sm font-bold uppercase tracking-widest text-center hover:bg-btn-hover transition-colors">
