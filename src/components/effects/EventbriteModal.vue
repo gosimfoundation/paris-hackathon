@@ -23,7 +23,7 @@ const show = ref(true)
             </p>
           </div>
 
-          <p class="text-xs text-red-400/80 text-center mb-4">An Eventbrite ticket is required for entry at STATION F.</p>
+          <p class="text-xs text-red-400/80 text-center mb-4">You'll need this ticket for check-in at the door.</p>
 
           <a :href="EB_URL" target="_blank" rel="noopener"
             class="block w-full py-3 bg-btn-bg text-btn-text text-sm font-bold uppercase tracking-widest text-center hover:bg-btn-hover transition-colors">
