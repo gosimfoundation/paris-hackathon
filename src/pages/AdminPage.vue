@@ -328,6 +328,14 @@ onMounted(() => { if (authed.value) loadData() })
 
     <!-- Admin panel -->
     <div v-else class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-wrap gap-2 mb-6">
+        <span class="text-xs text-gray-500 py-1">Quick links:</span>
+        <a href="/admin" class="text-xs px-2 py-1 bg-gray-800 text-amber-400 border border-gray-700">Admin</a>
+        <a href="/export" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Export</a>
+        <a href="/checkin" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Check-in</a>
+        <a href="/submit" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Submit</a>
+        <a href="/projects" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Projects</a>
+      </div>
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl font-bold text-white">GOSIM Hackathon Admin</h1>
         <div class="flex gap-2">
