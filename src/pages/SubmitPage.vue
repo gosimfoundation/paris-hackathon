@@ -15,8 +15,6 @@ const existingSubmission = ref<any>(null)
 
 const myTeam = computed(() => teams.value.find(t => t.members.some(m => m.id === user.value?.id)))
 const isLeader = computed(() => myTeam.value?.leaderId === user.value?.id)
-const dataReady = computed(() => !teamsLoading.value && teams.value.length >= 0 && user.value)
-
 // Load existing submission when team becomes available
 watch(myTeam, async (team) => {
   if (!team) return
