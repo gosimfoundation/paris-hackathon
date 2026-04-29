@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuth } from '../composables/useAuth'
 import { useTeams } from '../composables/useTeams'
 import { supabase } from '../lib/supabase'
 
 const { user, isLoggedIn } = useAuth()
-const { teams } = useTeams()
+const { teams, loading: teamsLoading } = useTeams()
 
 const githubUrl = ref('')
 const submitting = ref(false)
@@ -15,6 +15,17 @@ const existingSubmission = ref<any>(null)
 
 const myTeam = computed(() => teams.value.find(t => t.members.some(m => m.id === user.value?.id)))
 const isLeader = computed(() => myTeam.value?.leaderId === user.value?.id)
+const dataReady = computed(() => !teamsLoading.value && teams.value.length >= 0 && user.value)
+
+// Load existing submission when team becomes available
+watch(myTeam, async (team) => {
+  if (!team) return
+  const { data } = await supabase.from('submissions').select('*').eq('team_id', team.id).single()
+  if (data) {
+    existingSubmission.value = data
+    githubUrl.value = data.github_url
+  }
+}, { immediate: true })
 
 onMounted(async () => {
   if (!myTeam.value) return
@@ -55,9 +66,15 @@ async function submit() {
       <h1 class="text-3xl font-bold text-text-primary mb-2">Submit Your Project</h1>
       <p class="text-sm text-text-secondary mb-8">Provide your GitHub repository link. Make sure your repo includes a README, demo video link, and slides/presentation.</p>
 
-      <template v-if="!isLoggedIn">
+      <template v-if="!isLoggedIn && !teamsLoading">
         <div class="p-6 bg-bg-secondary border border-border text-center">
           <p class="text-text-secondary mb-4">Please log in to submit.</p>
+        </div>
+      </template>
+
+      <template v-else-if="teamsLoading">
+        <div class="p-6 bg-bg-secondary border border-border text-center">
+          <p class="text-text-secondary">Loading...</p>
         </div>
       </template>
 
