@@ -86,9 +86,9 @@ const themeColors: Record<string, string> = {
                 <span class="text-sm text-text-secondary">{{ theme.subtitle }}</span>
               </div>
               <p class="text-text-primary/75 text-sm leading-relaxed">{{ theme.description }}</p>
-              <span v-if="expandedTheme !== theme.number" class="inline-flex items-center gap-1 text-xs text-text-muted mt-2 group-hover:text-text-secondary transition-colors">
-                Click to explore
-                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              <span v-if="expandedTheme !== theme.number" class="inline-flex items-center gap-1.5 text-xs mt-3 px-3 py-1.5 border border-accent/40 text-accent hover:bg-accent/10 transition-colors cursor-pointer">
+                Explore this theme
+                <svg class="w-3 h-3 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
               </span>
             </div>
             <svg

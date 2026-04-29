@@ -28,7 +28,7 @@ async function tryAuth() {
   if (data && data.value === inputHash) {
     sessionStorage.setItem('admin_authed', '1')
     authed.value = true
-    loadData(); loadAnnouncement(); loadSubmissions(); loadPasswords()
+    loadData(); loadAnnouncement(); loadSubmissions()
   } else {
     passError.value = 'Wrong password'
   }
@@ -98,12 +98,10 @@ async function loadSubmissions() {
   submissions.value = data || []
 }
 
-// Passwords display
-const passwords = ref<Record<string, string>>({})
-async function loadPasswords() {
-  const { data } = await supabase.from('admin_config').select('key, value').in('key', ['admin_pass_plain', 'export_pass_plain', 'checkin_pass_plain'])
-  if (!data) return
-  for (const r of data) passwords.value[r.key] = r.value
+const passwords = {
+  admin: 'MLfakcrkTR5xHtqYzHWA-Q',
+  export: '6BhrMtDTDEpoMjtLdMYMMg',
+  checkin: 'gosim2026checkin',
 }
 
 async function loadData() {
@@ -360,9 +358,9 @@ onMounted(() => { if (authed.value) loadData() })
         <a href="/checkin" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Check-in</a>
         <a href="/projects" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Projects</a>
         <span class="text-gray-700 mx-1">|</span>
-        <span class="text-[10px] text-gray-600">admin: <span class="text-gray-400 font-mono select-all">{{ passwords.admin_pass_plain || '...' }}</span></span>
-        <span class="text-[10px] text-gray-600">export: <span class="text-gray-400 font-mono select-all">{{ passwords.export_pass_plain || '...' }}</span></span>
-        <span class="text-[10px] text-gray-600">checkin: <span class="text-gray-400 font-mono select-all">{{ passwords.checkin_pass_plain || '...' }}</span></span>
+        <span class="text-[10px] text-gray-600">admin: <span class="text-gray-400 font-mono select-all">{{ passwords.admin }}</span></span>
+        <span class="text-[10px] text-gray-600">export: <span class="text-gray-400 font-mono select-all">{{ passwords.export }}</span></span>
+        <span class="text-[10px] text-gray-600">checkin: <span class="text-gray-400 font-mono select-all">{{ passwords.checkin }}</span></span>
       </div>
       <div class="flex items-center justify-between mb-8">
         <h1 class="text-2xl font-bold text-white">GOSIM Hackathon Admin</h1>

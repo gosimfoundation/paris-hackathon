@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 
+const route = useRoute()
+const hiddenPages = ['admin', 'export', 'checkin']
+const shouldHide = computed(() => hiddenPages.some(p => route.path.includes(p)))
 const current = ref('')
 const history = ref<any[]>([])
 const dismissed = ref(false)
@@ -25,7 +29,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="current && !dismissed" class="fixed top-16 left-0 right-0 z-40 bg-amber-500 text-black text-sm font-semibold py-2 px-4 flex items-center justify-center gap-3">
+  <div v-if="current && !dismissed && !shouldHide" class="fixed top-16 left-0 right-0 z-40 bg-amber-500 text-black text-sm font-semibold py-2 px-4 flex items-center justify-center gap-3">
     <button @click="showHistory = !showHistory" class="text-black/50 hover:text-black text-xs" title="History">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     </button>
