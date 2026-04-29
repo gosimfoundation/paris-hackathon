@@ -757,11 +757,9 @@ async function saveProfile() {
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
 
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-bold text-text-primary">{{ profileEditing ? 'Edit Profile' : 'My Profile' }}</h3>
-            <button v-if="!profileEditing" @click="profileEditing = true" class="text-xs text-accent hover:text-text-primary transition-colors uppercase tracking-widest">Edit</button>
-            <button v-else @click="profileEditing = false" class="text-xs text-text-muted hover:text-text-primary transition-colors uppercase tracking-widest">Cancel</button>
-          </div>
+          <h3 class="text-lg font-bold text-text-primary mb-1">{{ profileEditing ? 'Edit Profile' : 'My Profile' }}</h3>
+          <button v-if="!profileEditing" @click="profileEditing = true" class="mb-4 px-4 py-1.5 text-xs border border-accent text-accent hover:bg-accent hover:text-black transition-colors uppercase tracking-widest">Edit Profile</button>
+          <button v-else @click="profileEditing = false" class="mb-4 px-4 py-1.5 text-xs border border-border text-text-muted hover:text-text-primary hover:border-text-secondary transition-colors uppercase tracking-widest">Cancel</button>
 
           <!-- View Mode -->
           <div v-if="!profileEditing && user" class="space-y-4">
