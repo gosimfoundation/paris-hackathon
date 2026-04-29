@@ -358,7 +358,6 @@ onMounted(() => { if (authed.value) loadData() })
         <a href="/admin" class="text-xs px-2 py-1 bg-gray-800 text-amber-400 border border-gray-700">Admin</a>
         <a href="/export" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Export</a>
         <a href="/checkin" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Check-in</a>
-        <a href="/submit" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Submit</a>
         <a href="/projects" class="text-xs px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 hover:text-white transition-colors">Projects</a>
         <span class="text-gray-700 mx-1">|</span>
         <span class="text-[10px] text-gray-600">admin: <span class="text-gray-400 font-mono select-all">{{ passwords.admin_pass_plain || '...' }}</span></span>
