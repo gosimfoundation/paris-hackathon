@@ -544,28 +544,6 @@ onMounted(() => { if (authed.value) loadData() })
           <button @click="importCodes" :disabled="!importText.trim()" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs font-bold uppercase disabled:opacity-50">Import</button>
         </div>
 
-        <!-- Assigned users -->
-        <div class="space-y-1 max-h-48 overflow-y-auto">
-          <div v-for="p in profiles.filter((p: any) => p.checked_in && p.team_id)" :key="'code-'+p.id"
-            class="flex items-center justify-between py-1.5 px-2 text-xs border-b border-gray-800/50">
-            <div class="flex items-center gap-2">
-              <span class="text-white">{{ p.name }}</span>
-              <span class="text-gray-600">{{ teams.find((t: any) => t.id === p.team_id)?.model || '?' }}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <template v-if="getUserCode(p.id)">
-                <code class="text-emerald-400 text-[10px] font-mono">{{ getUserCode(p.id).code }}</code>
-                <button @click="replaceCode(p.id, getUserCode(p.id).id, teams.find((t: any) => t.id === p.team_id)?.model)" class="text-amber-400 hover:text-amber-300 text-[10px]">Replace</button>
-                <button @click="revokeCode(getUserCode(p.id).id)" class="text-red-400 hover:text-red-300 text-[10px]">Revoke</button>
-              </template>
-              <template v-else-if="['MiniMax','Kimi'].includes(teams.find((t: any) => t.id === p.team_id)?.model)">
-                <button @click="manualAssign(p.id, teams.find((t: any) => t.id === p.team_id)?.model)" class="text-blue-400 hover:text-blue-300 text-[10px]">Assign</button>
-              </template>
-              <span v-else class="text-gray-600 text-[10px]">RouteTokens</span>
-            </div>
-          </div>
-        </div>
-
         <!-- Full code list -->
         <details class="mt-4">
           <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-300">View all codes ({{ redeemCodes.length }})</summary>
@@ -753,9 +731,16 @@ onMounted(() => { if (authed.value) loadData() })
                 </td>
                 <td class="py-3 px-3 text-gray-500 text-xs">{{ new Date(p.created_at).toLocaleDateString() }}</td>
                 <td class="py-3 px-3">
-                  <div class="flex gap-2">
+                  <div class="flex gap-2 items-center">
                     <button @click="showQr(p)" class="text-xs text-amber-400 hover:text-amber-300">QR</button>
                     <button @click="openEdit(p)" class="text-xs text-blue-400 hover:text-blue-300">Edit</button>
+                    <template v-if="p.checked_in && p.team_id && ['MiniMax','Kimi'].includes(teams.find((t: any) => t.id === p.team_id)?.model)">
+                      <template v-if="getUserCode(p.id)">
+                        <code class="text-[10px] text-emerald-400 font-mono">{{ getUserCode(p.id).code }}</code>
+                        <button @click="replaceCode(p.id, getUserCode(p.id).id, teams.find((t: any) => t.id === p.team_id)?.model)" class="text-[10px] text-gray-500 hover:text-amber-400">↻</button>
+                      </template>
+                      <button v-else @click="manualAssign(p.id, teams.find((t: any) => t.id === p.team_id)?.model)" class="text-xs text-emerald-500 hover:text-emerald-400">Code</button>
+                    </template>
                   </div>
                 </td>
               </tr>
