@@ -9,6 +9,7 @@ const { teams } = useTeams()
 
 const myTeam = computed(() => teams.value.find(t => t.members.some(m => m.id === user.value?.id)))
 const myCode = ref<any>(null)
+const codeRevealed = ref(false)
 
 const shouldShow = computed(() =>
   isLoggedIn.value && user.value?.checkedIn && user.value?.teamId
@@ -34,7 +35,8 @@ watch(shouldShow, (v) => { if (v) loadCode() }, { immediate: true })
 
       <template v-if="myCode">
         <p class="text-sm text-text-secondary mb-1">Your <strong class="text-text-primary">{{ myCode.model }}</strong> code:</p>
-        <code class="block px-3 py-2 bg-bg-secondary border border-accent/30 text-accent font-mono text-base select-all mb-2">{{ myCode.code }}</code>
+        <code @click="codeRevealed = !codeRevealed" class="block px-3 py-2 bg-bg-secondary border border-accent/30 text-accent font-mono text-base mb-2 cursor-pointer" :class="codeRevealed ? 'select-all' : ''">{{ codeRevealed ? myCode.code : '••••••••••••' }}</code>
+        <p v-if="!codeRevealed" class="text-[10px] text-text-muted mb-1">Click to reveal</p>
         <a v-if="myCode.model === 'MiniMax'" href="https://platform.minimax.io/docs/guides/pricing-token-plan" target="_blank" class="text-xs text-accent hover:underline">→ Redeem on MiniMax Platform</a>
         <a v-else-if="myCode.model === 'Kimi'" href="https://platform.kimi.ai/docs/api/overview" target="_blank" class="text-xs text-accent hover:underline">→ Redeem on Kimi Platform</a>
       </template>
