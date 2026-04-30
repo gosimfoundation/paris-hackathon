@@ -45,7 +45,7 @@ const hoveredDay = ref(-1)
 
 // Edit modal
 const editingUser = ref<any>(null)
-const editFields = ref({ name: '', email: '', role: '', bio: '', github_id: '', discord: '', twitter: '', telegram: '' })
+const editFields = ref({ name: '', email: '', role: '', bio: '', github_id: '', discord: '', twitter: '', telegram: '', admin_notes: '' })
 
 // QR modal
 const qrUser = ref<any>(null)
