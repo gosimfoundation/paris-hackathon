@@ -309,6 +309,7 @@ function openEdit(user: any) {
     discord: user.discord || '',
     twitter: user.twitter || '',
     telegram: user.telegram || '',
+    admin_notes: user.admin_notes || '',
   }
 }
 
@@ -579,6 +580,7 @@ onMounted(() => { if (authed.value) loadData() })
                     <img :src="userAvatar(p)"
                       class="w-7 h-7 rounded-full object-cover" />
                     <span class="text-white">{{ p.name }}</span>
+                    <span v-if="p.admin_notes" class="ml-1 text-amber-400 text-[10px]" :title="p.admin_notes">📝</span>
                   </div>
                 </td>
                 <td class="py-3 px-3 text-gray-400">{{ p.email || '—' }}</td>
@@ -704,7 +706,12 @@ onMounted(() => { if (authed.value) loadData() })
                 </div>
               </div>
             </div>
-            <div class="flex gap-3 mt-6">
+            <div class="mt-4">
+              <label class="block text-xs text-amber-400 mb-1">Admin Notes (internal only)</label>
+              <textarea v-model="editFields.admin_notes" rows="3" placeholder="Internal notes about this user..."
+                class="w-full px-3 py-2 bg-gray-800 border border-amber-500/30 text-white text-sm focus:border-amber-500 focus:outline-none"></textarea>
+            </div>
+            <div class="flex gap-3 mt-4">
               <button @click="saveEdit" class="flex-1 py-2 bg-amber-600 text-black font-semibold text-sm hover:bg-amber-500 transition-colors">Save</button>
               <button @click="editingUser = null" class="flex-1 py-2 bg-gray-800 text-gray-300 text-sm hover:bg-gray-700 transition-colors">Cancel</button>
             </div>
