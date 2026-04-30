@@ -326,8 +326,10 @@ const importModel = ref('MiniMax')
 const importText = ref('')
 
 async function loadCodes() {
-  const { data } = await supabase.from('redeem_codes').select('*').order('created_at')
+  const { data, error } = await supabase.from('redeem_codes').select('*').order('created_at')
+  if (error) console.error('[loadCodes]', error)
   redeemCodes.value = data || []
+  console.log('[loadCodes]', redeemCodes.value.length, 'codes loaded')
 }
 
 const codeStats = computed(() => {
